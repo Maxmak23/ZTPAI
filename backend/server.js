@@ -169,6 +169,20 @@ app.put('/movies/:id', (req, res) => {
     });
 });
 
+// Delete a movie
+app.delete('/movies/:id', (req, res) => {
+    const movieId = req.params.id;
+    const query = "DELETE FROM movies WHERE id = ?";
+    db.query(query, [movieId], (err, result) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json({ message: "Movie deleted successfully" });
+    });
+});
+
+
+
+
+
 
 
 
