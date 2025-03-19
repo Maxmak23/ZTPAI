@@ -123,10 +123,23 @@ app.post('/movies', (req, res) => {
     });
 });
 
-
-
-
-
+// Get all movies
+app.get('/movies', (req, res) => {
+    const query = `
+        SELECT movies.*, GROUP_CONCAT(screenings.screening_time) AS screening_times
+        FROM movies
+        LEFT JOIN screenings ON movies.id = screenings.movie_id
+        GROUP BY movies.id
+    `;
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: err });
+        const movies = results.map(movie => ({
+            ...movie,
+            screenings: movie.screening_times ? movie.screening_times.split(',') : []
+        }));
+        res.json(movies);
+    });
+});
 
 
 
