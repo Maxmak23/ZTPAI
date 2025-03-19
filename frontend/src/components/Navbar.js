@@ -18,6 +18,10 @@ const NavigationBar = () => {
                         {user && (user.role === "employee" || user.role === "manager") && <Nav.Link as={Link} to="/reservations">Reservations</Nav.Link>}
                         {user && user.role === "manager" && <Nav.Link as={Link} to="/manage">Manage</Nav.Link>}
                         {user && user.role === "admin" && <Nav.Link as={Link} to="/admin-panel">Admin Panel</Nav.Link>}
+
+                        
+                        {user && user.role === "client" && <Nav.Link as={Link} to="/movie-management">Movie management</Nav.Link>}
+
                     </Nav>
                     <Nav>
                         {user ? (

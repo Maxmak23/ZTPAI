@@ -10,6 +10,8 @@ import Navbar from "./components/Navbar";
 import { useContext } from "react";
 import Main from "./pages/Main";
 
+import MovieManagement from "./pages/MovieManagement";
+
 
 const ProtectedRoute = ({ children, roles }) => {
     const { user } = useContext(AuthContext);
@@ -31,6 +33,8 @@ function App() {
 					<Route path="/manage" element={<ProtectedRoute roles={['manager']}><Manage /></ProtectedRoute>} />
 					<Route path="/admin-panel" element={<ProtectedRoute roles={['admin']}><AdminPanel /></ProtectedRoute>} />
 					<Route path="*" element={<Navigate to="/" />} />
+                    
+					<Route path="/movie-management" element={<ProtectedRoute roles={['client']}><MovieManagement /></ProtectedRoute>} />
                 </Routes>
             </Router>
         </AuthProvider>
