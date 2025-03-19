@@ -145,6 +145,36 @@ app.get('/movies', (req, res) => {
 
 
 
+// Update a movie
+app.put('/movies/:id', (req, res) => {
+    const { title, description, duration, start_date, end_date, screenings } = req.body;
+    const movieId = req.params.id;
+    const query = "UPDATE movies SET title = ?, description = ?, duration = ?, start_date = ?, end_date = ? WHERE id = ?";
+    db.query(query, [title, description, duration, start_date, end_date, movieId], (err, result) => {
+        if (err) return res.status(500).json({ error: err });
+        db.query("DELETE FROM screenings WHERE movie_id = ?", [movieId], (err, result) => {
+            if (err) return res.status(500).json({ error: err });
+            const screeningQueries = screenings.map(time => {
+                return new Promise((resolve, reject) => {
+                    db.query("INSERT INTO screenings (movie_id, screening_time) VALUES (?, ?)", [movieId, time], (err, result) => {
+                        if (err) reject(err);
+                        resolve(result);
+                    });
+                });
+            });
+            Promise.all(screeningQueries)
+                .then(() => res.json({ message: "Movie updated successfully" }))
+                .catch(err => res.status(500).json({ error: err }));
+        });
+    });
+});
+
+
+
+
+
+
+
 
 
 
