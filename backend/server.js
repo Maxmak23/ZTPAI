@@ -181,71 +181,7 @@ app.delete('/movies/:id', (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// SQL Query to Create Users Table (Run this manually in MySQL):
-// CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), password VARCHAR(255), role ENUM('client','employee','manager','admin'));
-// INSERT INTO users (username, password, role) VALUES  ('admin', '$2a$10$1234567890abcdef', 'admin'), ('employee1', '$2a$10$1234567890abcdef', 'employee'), ('employee2', '$2a$10$1234567890abcdef', 'employee'), ('manager1', '$2a$10$1234567890abcdef', 'manager'), ('manager2', '$2a$10$1234567890abcdef', 'manager'), ('client1', '$2a$10$1234567890abcdef', 'client'), ('client2', '$2a$10$1234567890abcdef', 'client'), ('client3', '$2a$10$1234567890abcdef', 'client');
-
-
-
-// CREATE TABLE movies (
-//     id INT AUTO_INCREMENT PRIMARY KEY,
-//     title VARCHAR(255) NOT NULL,
-//     description TEXT,
-//     duration INT NOT NULL,
-//     start_date DATE NOT NULL,
-//     end_date DATE NOT NULL
-// );
-
-// CREATE TABLE screenings (
-//     id INT AUTO_INCREMENT PRIMARY KEY,
-//     movie_id INT NOT NULL,
-//     screening_time TIME NOT NULL,
-//     FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
-// );
