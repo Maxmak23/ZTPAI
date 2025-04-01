@@ -21,6 +21,7 @@ const NavigationBar = () => {
 
                         
                         {user && user.role === "client" && <Nav.Link as={Link} to="/movie-management">Movie management</Nav.Link>}
+                        {user && user.role === "client" && <Nav.Link as={Link} to="/movie-listings">Movie listings</Nav.Link>}
 
                     </Nav>
                     <Nav>
