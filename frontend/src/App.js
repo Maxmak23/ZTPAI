@@ -11,6 +11,7 @@ import { useContext } from "react";
 import Main from "./pages/Main";
 
 import MovieManagement from "./pages/MovieManagement";
+import MovieListings from "./pages/MovieListings";
 
 
 const ProtectedRoute = ({ children, roles }) => {
@@ -35,6 +36,7 @@ function App() {
 					<Route path="*" element={<Navigate to="/" />} />
                     
 					<Route path="/movie-management" element={<ProtectedRoute roles={['client']}><MovieManagement /></ProtectedRoute>} />
+					<Route path="/movie-listings" element={<ProtectedRoute roles={['client']}><MovieListings /></ProtectedRoute>} />
                 </Routes>
             </Router>
         </AuthProvider>
