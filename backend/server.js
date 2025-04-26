@@ -587,16 +587,18 @@ app.get('/movies/playing', async (req, res) => {
 
 
 
-
-
+module.exports = app;
 
 // Start the server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-}).on('error', (err) => {
-    console.error('Server startup error:', err);
-    process.exit(1);
-});
+if (require.main === module) {
+	app.listen(PORT, () => {
+		console.log(`Server running on port ${PORT}`);
+	}).on('error', (err) => {
+		console.error('Server startup error:', err);
+		process.exit(1);
+	});
+}
+
 
 // SQL Query to Create Users Table (Run this manually in MySQL):
 // CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255), password VARCHAR(255), role ENUM('client','employee','manager','admin'));
