@@ -12,74 +12,178 @@ const cors = require("cors");
 const session = require("express-session");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+
 
 // MySQL Database Connection
-const db = mysql.createConnection({
+const dbConfig = {
     host: process.env.MYSQL_HOSTNAME || "localhost",
     user: process.env.MYSQL_USERNAME || "root",
     password: process.env.MYSQL_PASSWORD || "",
     database: process.env.MYSQL_DB_NAME || "makuch_cinema_app"
-});
+};
 
-db.connect(err => {
-    if (err) throw err;
+const db = mysql.createPool(dbConfig);
+
+// Test database connection
+db.getConnection((err, connection) => {
+    if (err) {
+        console.error('Error connecting to MySQL Database:', err);
+        process.exit(1);
+    }
     console.log("Connected to MySQL Database");
+    connection.release();
 });
 
-// Middleware
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
-app.use(express.json());
-app.use(session({
-    secret: "supersecretkey",
-    resave: false,
-    saveUninitialized: false,
+// Middleware with error handling
+app.use(cors({ 
+    origin: "http://localhost:3000", 
+    credentials: true 
 }));
 
-// Register Endpoint
-app.post("/register", (req, res) => {
-    const { username, password, role } = req.body;
-    bcrypt.hash(password, 10, (err, hash) => {
-        if (err) return res.status(500).json({ error: err });
-        const query = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-        db.query(query, [username, hash, role], (err, result) => {
-            if (err) return res.status(500).json({ error: err });
-            res.json({ message: "User registered successfully" });
-        });
-    });
+app.use(express.json());
+
+
+// Central error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Unhandled error:', err);
+    res.status(500).json({ error: 'Internal server error' });
 });
 
-// Login Endpoint
-app.post("/login", (req, res) => {
-    const { username, password } = req.body;
-    const query = "SELECT * FROM users WHERE username = ?";
-    db.query(query, [username], (err, results) => {
-        if (err) return res.status(500).json({ error: err });
-        if (results.length === 0) return res.status(401).json({ message: "User not found" });
-        bcrypt.compare(password, results[0].password, (err, isMatch) => {
-            if (err) return res.status(500).json({ error: err });
-            if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-            
-            // Create a session
-            req.session.user = { id: results[0].id, username: results[0].username, role: results[0].role };
-            res.json({ message: "Login successful", user: req.session.user });
-        });
-    });
-});
+// Register Endpoint with enhanced error handling
+app.post("/register", async (req, res) => {
+    try {
+        const { username, password, role } = req.body;
+        
+        // Validate input
+        if (!username || !password || !role) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        if (password.length < 8) {
+            return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+        }
 
-// Check Authentication
-app.get("/auth", (req, res) => {
-    if (req.session.user) {
-        res.json({ authenticated: true, user: req.session.user });
-    } else {
-        res.json({ authenticated: false });
+        // Check if user already exists
+        const checkUserQuery = "SELECT * FROM users WHERE username = ?";
+        const [existingUsers] = await db.promise().query(checkUserQuery, [username]);
+        
+        if (existingUsers.length > 0) {
+            return res.status(409).json({ error: 'Username already exists' });
+        }
+
+        // Hash password and create user
+        const hash = await bcrypt.hash(password, 10);
+        const createUserQuery = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
+        const [result] = await db.promise().query(createUserQuery, [username, hash, role]);
+
+        res.status(201).json({ 
+            message: "User registered successfully",
+            userId: result.insertId 
+        });
+    } catch (err) {
+        console.error('Registration error:', err);
+        res.status(500).json({ 
+            error: 'Registration failed',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
 
-// Logout Endpoint
+// Login Endpoint with enhanced error handling
+app.post("/login", async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // Validate input
+        if (!username || !password) {
+            return res.status(400).json({ error: 'Missing username or password' });
+        }
+
+        const query = "SELECT * FROM users WHERE username = ?";
+        const [results] = await db.promise().query(query, [username]);
+        
+        if (results.length === 0) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+
+        const user = results[0];
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if (!isMatch) {
+            return res.status(401).json({ error: "Invalid credentials" });
+        }
+        
+        // Create a session
+        req.session.user = { 
+            id: user.id, 
+            username: user.username, 
+            role: user.role 
+        };
+        
+        res.json({ 
+            message: "Login successful", 
+            user: req.session.user 
+        });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ 
+            error: 'Login failed',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
+// Check Authentication with error handling
+app.get("/auth", (req, res) => {
+    try {
+        if (req.session.user) {
+            res.json({ 
+                authenticated: true, 
+                user: req.session.user 
+            });
+        } else {
+            res.json({ authenticated: false });
+        }
+    } catch (err) {
+        console.error('Auth check error:', err);
+        res.status(500).json({ 
+            error: 'Authentication check failed',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
+// Logout Endpoint with error handling
 app.post("/logout", (req, res) => {
-    req.session.destroy();
-    res.json({ message: "Logged out successfully" });
+    try {
+        req.session.destroy(err => {
+            if (err) {
+                console.error('Session destruction error:', err);
+                return res.status(500).json({ error: 'Logout failed' });
+            }
+            
+            res.clearCookie('connect.sid'); // Clear the session cookie
+            res.json({ message: "Logged out successfully" });
+        });
+    } catch (err) {
+        console.error('Logout error:', err);
+        res.status(500).json({ 
+            error: 'Logout failed',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+    console.error('Unhandled rejection:', err);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught exception:', err);
+    process.exit(1);
 });
 
 
@@ -255,8 +359,12 @@ app.get('/movies/playing', (req, res) => {
 
 
 
+// Start the server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
+}).on('error', (err) => {
+    console.error('Server startup error:', err);
+    process.exit(1);
 });
 
 // SQL Query to Create Users Table (Run this manually in MySQL):
