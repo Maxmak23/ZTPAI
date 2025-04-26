@@ -473,44 +473,102 @@ app.delete('/movies/:id', async (req, res) => {
 
 
 
+app.get('/movies/playing', async (req, res) => {
+    try {
+        // Validate date parameter
+        const date = req.query.date;
+        if (!date) {
+            return res.status(400).json({ 
+                error: 'Date parameter is required',
+                example: '/movies/playing?date=2023-12-31'
+            });
+        }
 
+        // Validate date format (YYYY-MM-DD)
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(date)) {
+            return res.status(400).json({ 
+                error: 'Invalid date format. Please use YYYY-MM-DD format',
+                received: date,
+                example: '2023-12-31'
+            });
+        }
 
-app.get('/movies/playing', (req, res) => {
-    const date = req.query.date;
-    
-    const query = `
-        SELECT 
-            m.*,
-            GROUP_CONCAT(
-                TIME_FORMAT(s.screening_time, '%H:%i:%s')
-                ORDER BY s.screening_time
-            ) AS screenings
-        FROM 
-            movies m
-        LEFT JOIN 
-            screenings s ON m.id = s.movie_id
-            AND DATE(s.screening_time) = ?
-        WHERE 
-            m.start_date <= ? AND 
-            m.end_date >= ?
-        GROUP BY 
-            m.id
-    `;
-    
-    db.query(query, [date, date, date], (err, results) => {
-        if (err) return res.status(500).json({ error: err });
+        // Validate the date is a valid calendar date
+        const parsedDate = new Date(date);
+        if (isNaN(parsedDate.getTime())) {
+            return res.status(400).json({ 
+                error: 'Invalid date value',
+                received: date
+            });
+        }
+
+        // Format the date to ensure MySQL compatibility
+        const formattedDate = parsedDate.toISOString().split('T')[0];
+
+        const query = `
+            SELECT 
+                m.*,
+                GROUP_CONCAT(
+                    TIME_FORMAT(s.screening_time, '%H:%i:%s')
+                    ORDER BY s.screening_time
+                ) AS screenings
+            FROM 
+                movies m
+            LEFT JOIN 
+                screenings s ON m.id = s.movie_id
+                AND DATE(s.screening_time) = ?
+            WHERE 
+                m.start_date <= ? AND 
+                m.end_date >= ?
+            GROUP BY 
+                m.id
+        `;
         
+        // Using promise-based query with connection pooling
+        const [results] = await db.promise().query(query, [formattedDate, formattedDate, formattedDate]);
+        
+        // Process results
         const movies = results.map(movie => ({
             ...movie,
-            screenings: movie.screenings ? movie.screenings.split(',') : []
+            screenings: movie.screenings ? 
+                movie.screenings.split(',').filter(time => time.trim() !== '') : 
+                []
         }));
         
-        res.json(movies);
-    });
+        // Add cache headers for better performance
+        res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        res.json({
+            success: true,
+            date: formattedDate,
+            count: movies.length,
+            data: movies
+        });
+
+    } catch (err) {
+        console.error('Error fetching currently playing movies:', err);
+        
+        // Differentiate between different types of errors
+        let statusCode = 500;
+        let errorMessage = 'Failed to fetch currently playing movies';
+        
+        if (err.code === 'ER_PARSE_ERROR') {
+            statusCode = 400;
+            errorMessage = 'Invalid date parameter';
+        } else if (err.code === 'ECONNREFUSED') {
+            errorMessage = 'Database connection failed';
+        }
+        
+        res.status(statusCode).json({ 
+            success: false,
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? {
+                message: err.message,
+                stack: err.stack
+            } : undefined
+        });
+    }
 });
-
-
-
 
 
 
