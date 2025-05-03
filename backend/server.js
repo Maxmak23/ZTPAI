@@ -12,15 +12,29 @@ const cors = require("cors");
 const session = require("express-session");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+//const PORT = process.env.PORT || 5000;
+const PORT = 5000;
+
+app.use(session({
+    secret: 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // set to true if using HTTPS
+}));
 
 
 // MySQL Database Connection
+// const dbConfig = {
+//     host: process.env.MYSQL_HOSTNAME || "localhost",
+//     user: process.env.MYSQL_USERNAME || "root",
+//     password: process.env.MYSQL_PASSWORD || "",
+//     database: process.env.MYSQL_DB_NAME || "makuch_cinema_app"
+// };
 const dbConfig = {
-    host: process.env.MYSQL_HOSTNAME || "localhost",
-    user: process.env.MYSQL_USERNAME || "root",
-    password: process.env.MYSQL_PASSWORD || "",
-    database: process.env.MYSQL_DB_NAME || "makuch_cinema_app"
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "makuch_cinema_app"
 };
 
 const db = mysql.createPool(dbConfig);
@@ -49,6 +63,11 @@ app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
+
+
+
+
+
 
 // Register Endpoint with enhanced error handling
 app.post("/register", async (req, res) => {
@@ -137,7 +156,7 @@ app.post("/login", async (req, res) => {
 // Check Authentication with error handling
 app.get("/auth", (req, res) => {
     try {
-        if (req.session.user) {
+        if (req.session && req.session.user) {
             res.json({ 
                 authenticated: true, 
                 user: req.session.user 
@@ -473,8 +492,9 @@ app.delete('/movies/:id', async (req, res) => {
 
 
 
-app.get('/movies/playing', async (req, res) => {
+app.get('/movies/playing', async (req, res) => {    
     try {
+
         // Validate date parameter
         const date = req.query.date;
         if (!date) {
@@ -512,7 +532,8 @@ app.get('/movies/playing', async (req, res) => {
                 GROUP_CONCAT(
                     TIME_FORMAT(s.screening_time, '%H:%i:%s')
                     ORDER BY s.screening_time
-                ) AS screenings
+                ) AS screenings,
+                GROUP_CONCAT(s.id ORDER BY s.screening_time) AS screeningIds
             FROM 
                 movies m
             LEFT JOIN 
@@ -529,21 +550,27 @@ app.get('/movies/playing', async (req, res) => {
         const [results] = await db.promise().query(query, [formattedDate, formattedDate, formattedDate]);
         
         // Process results
-        const movies = results.map(movie => ({
+        var movies = results.map(movie => ({
             ...movie,
             screenings: movie.screenings ? 
                 movie.screenings.split(',').filter(time => time.trim() !== '') : 
                 []
         }));
+
+        for(var i=0;i<movies.length;i+=1){
+            movies[i].screeningIds = movies[i].screeningIds.split(',');
+        }
         
         // Add cache headers for better performance
-        res.set('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        //res.set('Cache-Control', 'public, max-age=0'); // Cache for 1 hour
         res.json({
             success: true,
             date: formattedDate,
             count: movies.length,
             data: movies
         });
+
+        console.log(movies);
 
     } catch (err) {
         console.error('Error fetching currently playing movies:', err);
@@ -569,6 +596,127 @@ app.get('/movies/playing', async (req, res) => {
         });
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Get screening details (for ReserveSeat page)
+app.get('/screenings/:id', async (req, res) => {
+    try {
+        const screeningId = req.params.id;
+        
+        // Get screening with movie details
+        const [screening] = await db.promise().query(`
+            SELECT s.*, m.title, m.duration, DATE_FORMAT(s.screening_time, '%Y-%m-%d %H:%i:%s') as formatted_time
+            FROM screenings s
+            JOIN movies m ON s.movie_id = m.id
+            WHERE s.id = ?
+        `, [screeningId]);
+        
+        if (!screening.length) {
+            return res.status(404).json({ error: 'Screening not found' });
+        }
+        
+        // Get reserved seats for this screening
+        const [reservedSeats] = await db.promise().query(
+            'SELECT seat_number FROM reservations WHERE screening_id = ?',
+            [screeningId]
+        );
+        
+        res.json({
+            success: true,
+            data: {
+                screening: screening[0],
+                reservedSeats: reservedSeats.map(seat => seat.seat_number)
+            }
+        });
+        
+    } catch (err) {
+        console.error('Error fetching screening:', err);
+        res.status(500).json({ success: false, error: 'Failed to fetch screening' });
+    }
+});
+
+// Create reservation
+app.post('/reservations', async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        
+        const { screening_id, seat_number } = req.body;
+        
+        // Validate input
+        if (!screening_id || !seat_number) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Check if seat is already taken
+        const [existing] = await db.promise().query(
+            'SELECT id FROM reservations WHERE screening_id = ? AND seat_number = ?',
+            [screening_id, seat_number]
+        );
+        
+        if (existing.length > 0) {
+            return res.status(409).json({ error: 'Seat already reserved' });
+        }
+        
+        // Create reservation
+        await db.promise().query(
+            'INSERT INTO reservations (user_id, screening_id, seat_number) VALUES (?, ?, ?)',
+            [req.session.user.id, screening_id, seat_number]
+        );
+        
+        res.json({ success: true });
+        
+    } catch (err) {
+        console.error('Error creating reservation:', err);
+        res.status(500).json({ success: false, error: 'Failed to create reservation' });
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -621,3 +769,24 @@ if (require.main === module) {
 //     screening_time TIME NOT NULL,
 //     FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE
 // );
+
+// CREATE TABLE reservations (
+//     id INT AUTO_INCREMENT PRIMARY KEY,
+//     user_id INT NOT NULL,
+//     screening_id INT NOT NULL,
+//     seat_number VARCHAR(10) NOT NULL,
+//     reservation_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+//     FOREIGN KEY (screening_id) REFERENCES screenings(id) ON DELETE CASCADE,
+//     UNIQUE KEY unique_reservation (screening_id, seat_number)
+// );
+
+
+
+
+
+
+
+
+
+
