@@ -13,7 +13,7 @@ import Main from "./pages/Main";
 import MovieManagement from "./pages/MovieManagement";
 import MovieListings from "./pages/MovieListings";
 import ReserveSeat from './pages/ReserveSeat';
-
+import EmployeeDashboard from './pages/EmployeeDashboard';
 
 const ProtectedRoute = ({ children, roles }) => {
     const { user } = useContext(AuthContext);
@@ -39,6 +39,7 @@ function App() {
 					<Route path="/movie-management" element={<ProtectedRoute roles={['client']}><MovieManagement /></ProtectedRoute>} />
 					<Route path="/movie-listings" element={<ProtectedRoute roles={['client']}><MovieListings /></ProtectedRoute>} />
                     <Route path="/reserve/:id" element={<ReserveSeat />} />
+                    <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
                 </Routes>
             </Router>
         </AuthProvider>
