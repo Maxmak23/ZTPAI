@@ -13,7 +13,8 @@ const NavigationBar = () => {
         { path: "/manage", label: "Manage", roles: ["manager"] },
         { path: "/admin-panel", label: "Admin Panel", roles: ["admin"] },
         { path: "/movie-management", label: "Movie management", roles: ["client"] },
-        { path: "/movie-listings", label: "Movie listings", roles: ["client"] }
+        { path: "/movie-listings", label: "Movie listings", roles: ["client"] },
+        { path: "/employee-dashboard", label: "Employee Dashboard", roles: ["client"] }
     ];
 
     // Check if user has access to a specific path
