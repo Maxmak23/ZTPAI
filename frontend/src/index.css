@@ -11,3 +11,99 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+
+
+
+
+
+
+/* Seat Map Styles */
+.screen {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+    border-radius: 4px;
+}
+
+.seat-map {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.seat-row {
+    display: flex;
+    align-items: center;
+}
+
+.row-label {
+    width: 20px;
+    font-weight: bold;
+}
+
+.seat {
+    width: 30px;
+    height: 30px;
+    margin: 0 3px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.seat:hover:not(.reserved) {
+    background: #e9ecef;
+}
+
+.seat.selected {
+    background: #0d6efd;
+    color: white;
+    border-color: #0d6efd;
+}
+
+.seat.reserved {
+    background: #dc3545;
+    color: white;
+    cursor: not-allowed;
+    border-color: #dc3545;
+}
+
+.time-badge-link {
+    text-decoration: none;
+}
+
+.time-badge-link:hover .time-badge {
+    background-color: #0b5ed7;
+}
+
+
+/* My Reservations Table Styles */
+.reservations-table {
+    margin-top: 20px;
+}
+
+.reservations-table th {
+    background-color: #343a40;
+    color: white;
+}
+
+.reservations-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.no-reservations {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.no-reservations p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
