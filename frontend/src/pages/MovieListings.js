@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Container, Card, Button, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import './style/MovieListings.css';
 
 const MovieListings = () => {
@@ -13,9 +14,11 @@ const MovieListings = () => {
         try {
             const response = await axios.get(`http://localhost:5000/movies/playing?date=${currentDate}`);
             // Sort movies by start_date (newest first)
-            const sortedMovies = response.data.sort((a, b) => 
+            console.log(response);
+            const sortedMovies = response.data.data.sort((a, b) => 
                 new Date(b.start_date) - new Date(a.start_date));
             setMovies(sortedMovies);
+
         } catch (error) {
             console.error("Error fetching movies:", error);
         } finally {
@@ -61,7 +64,7 @@ const MovieListings = () => {
                                 <Card.Body>
                                     <Card.Title>{movie.title}</Card.Title>
                                     <Card.Text className="text-muted small">
-                                        {movie.duration} min | {movie.start_date} to {movie.end_date}
+                                        {movie.duration} min | {movie.start_date.split('T')[0]} to {movie.end_date.split('T')[0]}
                                     </Card.Text>
                                     <Card.Text>{movie.description}</Card.Text>
                                 </Card.Body>
@@ -71,9 +74,15 @@ const MovieListings = () => {
                                         <div className="d-flex flex-wrap gap-2">
                                             {movie.screenings && movie.screenings.length > 0 ? (
                                                 movie.screenings.map((time, i) => (
-                                                    <span key={i} className="time-badge">
-                                                        {formatTime(time)}
-                                                    </span>
+                                                    <Link 
+                                                        key={i} 
+                                                        to={`/reserve/${movie.screeningIds[i]}`}
+                                                        className="time-badge-link"
+                                                    >
+                                                        <span className="time-badge">
+                                                            {formatTime(time)}
+                                                        </span>
+                                                    </Link>
                                                 ))
                                             ) : (
                                                 <span className="text-muted">No screenings today</span>
