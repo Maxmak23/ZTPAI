@@ -6,6 +6,22 @@ import { AuthContext } from "../context/AuthContext";
 const NavigationBar = () => {
     const { user, logout } = useContext(AuthContext);
 
+    const navItems = [
+        { path: "/", label: "Home", roles: ["client", "employee", "manager", "admin"] },
+        { path: "/my-reservations", label: "My Reservations", roles: ["client"] },
+        { path: "/reservations", label: "Reservations", roles: ["employee", "manager"] },
+        { path: "/manage", label: "Manage", roles: ["manager"] },
+        { path: "/admin-panel", label: "Admin Panel", roles: ["admin"] },
+        { path: "/movie-management", label: "Movie management", roles: ["client"] },
+        { path: "/movie-listings", label: "Movie listings", roles: ["client"] }
+    ];
+
+    // Check if user has access to a specific path
+    const hasAccess = (requiredRoles) => {
+        return user && requiredRoles.includes(user.role);
+    };    
+
+
     return (
         <Navbar bg="dark" variant="dark" expand="lg">
             <Container>
@@ -13,22 +29,23 @@ const NavigationBar = () => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
-                        <Nav.Link as={Link} to="/">Home</Nav.Link>
-                        {user && user.role === "client" && <Nav.Link as={Link} to="/my-reservations">My Reservations</Nav.Link>}
-                        {user && (user.role === "employee" || user.role === "manager") && <Nav.Link as={Link} to="/reservations">Reservations</Nav.Link>}
-                        {user && user.role === "manager" && <Nav.Link as={Link} to="/manage">Manage</Nav.Link>}
-                        {user && user.role === "admin" && <Nav.Link as={Link} to="/admin-panel">Admin Panel</Nav.Link>}
-
-                        
-                        {user && user.role === "client" && <Nav.Link as={Link} to="/movie-management">Movie management</Nav.Link>}
-                        {user && user.role === "client" && <Nav.Link as={Link} to="/movie-listings">Movie listings</Nav.Link>}
-
+                        {navItems.map((item) => (
+                            hasAccess(item.roles) && (
+                                <Nav.Link key={item.path} as={Link} to={item.path}>
+                                    {item.label}
+                                </Nav.Link>
+                            )
+                        ))}
                     </Nav>
                     <Nav>
                         {user ? (
                             <>
-                                <Navbar.Text className="me-3">Logged in as: {user.username}</Navbar.Text>
-                                <Button variant="outline-light" onClick={logout}>Logout</Button>
+                                <Navbar.Text className="me-3">
+                                    Logged in as: {user.username}
+                                </Navbar.Text>
+                                <Button variant="outline-light" onClick={logout}>
+                                    Logout
+                                </Button>
                             </>
                         ) : (
                             <>
