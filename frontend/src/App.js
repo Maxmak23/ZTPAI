@@ -12,6 +12,7 @@ import Main from "./pages/Main";
 
 import MovieManagement from "./pages/MovieManagement";
 import MovieListings from "./pages/MovieListings";
+import ReserveSeat from './pages/ReserveSeat';
 
 
 const ProtectedRoute = ({ children, roles }) => {
@@ -37,6 +38,7 @@ function App() {
                     
 					<Route path="/movie-management" element={<ProtectedRoute roles={['client']}><MovieManagement /></ProtectedRoute>} />
 					<Route path="/movie-listings" element={<ProtectedRoute roles={['client']}><MovieListings /></ProtectedRoute>} />
+                    <Route path="/reserve/:id" element={<ReserveSeat />} />
                 </Routes>
             </Router>
         </AuthProvider>

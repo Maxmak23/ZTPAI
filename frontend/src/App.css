@@ -36,3 +36,54 @@
     transform: rotate(360deg);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/* MovieListings.css */
+.movie-listings {
+    padding: 2rem 0;
+}
+
+.movie-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.movie-card img {
+    height: 400px;
+    object-fit: cover;
+}
+
+.time-badge {
+    cursor: pointer;
+    padding: 0.5em 1em;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.time-badge:hover {
+    background-color: #0b5ed7 !important;
+    transform: scale(1.05);
+}
+
+.date-picker {
+    max-width: 250px;
+    margin: 0 auto;
+}
