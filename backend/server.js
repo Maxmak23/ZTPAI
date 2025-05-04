@@ -10,6 +10,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const session = require("express-session");
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
 const app = express();
 //const PORT = process.env.PORT || 5000;
@@ -108,6 +110,34 @@ function requireRole(acceptedRoles) {
 
 
 
+// Swagger definition as a JS object (converted from your YAML)
+const swaggerDefinition = {
+  openapi: '3.0.0',
+  info: {
+    title: 'User Registration API',
+    version: '1.0.0',
+    description: 'API for user registration and authentication',
+  },
+  paths: {
+    '/register': {
+      post: {
+        // ... paste all your YAML path definition here as JS object
+        tags: ['Users'],
+        summary: 'Register a new user',
+        // ... rest of your YAML converted to JS object
+      }
+    }
+  }
+};
+
+// Swagger setup
+const options = {
+  swaggerDefinition,
+  apis: ['./server.js'], // Still scan server.js for JSDoc comments
+};
+
+const specs = swaggerJsdoc(options);
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 
 
@@ -120,7 +150,56 @@ function requireRole(acceptedRoles) {
 
 
 
-// Register Endpoint with enhanced error handling
+
+
+
+
+
+
+
+/**
+ * @swagger
+ * /register:
+ *   post:
+ *     tags:
+ *       - Users
+ *     summary: Register a new user
+ *     description: Creates a new user account with the provided credentials
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - role
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: "john_doe"
+ *               password:
+ *                 type: string
+ *                 example: "securePassword123"
+ *               role:
+ *                 type: string
+ *                 example: "user"
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User registered successfully"
+ *                 userId:
+ *                   type: integer
+ *                   example: 42
+ */
 app.post("/register", async (req, res) => {
     try {
         const { username, password, role } = req.body;
@@ -160,7 +239,90 @@ app.post("/register", async (req, res) => {
     }
 });
 
-// Login Endpoint with enhanced error handling
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: User login
+ *     description: Authenticate user and create a session
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Registered username
+ *                 example: "john_doe"
+ *               password:
+ *                 type: string
+ *                 description: User's password
+ *                 example: "securePassword123"
+ *     responses:
+ *       200:
+ *         description: Successfully logged in
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Login successful"
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     username:
+ *                       type: string
+ *                       example: "john_doe"
+ *                     role:
+ *                       type: string
+ *                       example: "user"
+ *       400:
+ *         description: Bad request - missing credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Missing username or password"
+ *       401:
+ *         description: Unauthorized - invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid credentials"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Login failed"
+ *                 details:
+ *                   type: string
+ *                   description: Detailed error message (development only)
+ *                   example: "Database connection error"
+ */
 app.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -206,7 +368,59 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// Check Authentication with error handling
+/**
+ * @swagger
+ * /auth:
+ *   get:
+ *     tags:
+ *       - Authentication
+ *     summary: Check authentication status
+ *     description: Verify if user has an active session and retrieve session data
+ *     responses:
+ *       200:
+ *         description: Authentication status check successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     authenticated:
+ *                       type: boolean
+ *                       example: true
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         username:
+ *                           type: string
+ *                           example: "john_doe"
+ *                         role:
+ *                           type: string
+ *                           example: "user"
+ *                 - type: object
+ *                   properties:
+ *                     authenticated:
+ *                       type: boolean
+ *                       example: false
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Authentication check failed"
+ *                 details:
+ *                   type: string
+ *                   description: Detailed error message (development only)
+ *                   example: "Session store connection error"
+ *     security: []
+ */
 app.get("/auth", (req, res) => {
     try {
         if (req.session && req.session.user) {
@@ -226,7 +440,52 @@ app.get("/auth", (req, res) => {
     }
 });
 
-// Logout Endpoint with error handling
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Logout user
+ *     description: Destroy current session and clear authentication cookies
+ *     responses:
+ *       200:
+ *         description: Successfully logged out
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Logged out successfully"
+ *       401:
+ *         description: Unauthorized (if no active session exists)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "No active session"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Logout failed"
+ *                 details:
+ *                   type: string
+ *                   description: Detailed error message (development only)
+ *                   example: "Session store connection error"
+ *     security:
+ *       - cookieAuth: []
+ */
 app.post("/logout", (req, res) => {
     try {
         req.session.destroy(err => {
@@ -278,7 +537,99 @@ process.on('uncaughtException', (err) => {
 
 
 
-// Add a new movie with screenings
+/**
+ * @swagger
+ * /movies:
+ *   post:
+ *     tags:
+ *       - Movies
+ *     summary: Add a new movie with screenings
+ *     description: Creates a new movie entry with multiple screening times (uses transaction)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - duration
+ *               - start_date
+ *               - end_date
+ *               - screenings
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Inception"
+ *               description:
+ *                 type: string
+ *                 example: "A mind-bending thriller"
+ *               duration:
+ *                 type: integer
+ *                 description: Duration in minutes
+ *                 example: 148
+ *               start_date:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2023-06-01"
+ *               end_date:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2023-06-30"
+ *               screenings:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: date-time
+ *                 example: ["2023-06-01T18:00:00", "2023-06-02T20:30:00"]
+ *     responses:
+ *       201:
+ *         description: Movie and screenings added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Movie added successfully"
+ *                 movieId:
+ *                   type: integer
+ *                   example: 42
+ *                 screeningsAdded:
+ *                   type: integer
+ *                   example: 2
+ *       400:
+ *         description: Bad request - validation errors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   examples:
+ *                     missingFields: "Missing required fields (title, duration, start_date, or end_date)"
+ *                     invalidDuration: "Duration must be a number"
+ *                     invalidDate: "Invalid date format"
+ *                     invalidScreenings: "At least one screening time is required"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to add movie"
+ *                 details:
+ *                   type: string
+ *                   description: Detailed error message (development only)
+ *                   example: "Database connection error"
+ *     security:
+ *       - cookieAuth: []
+ */
 app.post('/movies', async (req, res) => {
     try {
         const { title, description, duration, start_date, end_date, screenings } = req.body;
@@ -353,8 +704,67 @@ app.post('/movies', async (req, res) => {
     }
 });
 
-// Get all movies with their screenings
-//, requireRole(['manager'])
+
+
+/**
+ * @swagger
+ * /movies:
+ *   get:
+ *     tags:
+ *       - Movies
+ *     summary: Get all movies with screening times
+ *     description: Returns a list of all movies with their associated screening times
+ *     responses:
+ *       200:
+ *         description: List of movies with screenings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   title:
+ *                     type: string
+ *                     example: "Inception"
+ *                   description:
+ *                     type: string
+ *                     example: "A mind-bending thriller"
+ *                   duration:
+ *                     type: integer
+ *                     example: 148
+ *                   start_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2023-06-01"
+ *                   end_date:
+ *                     type: string
+ *                     format: date
+ *                     example: "2023-06-30"
+ *                   screenings:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                       format: date-time
+ *                     example: ["2023-06-01T18:00:00", "2023-06-02T20:30:00"]
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to fetch movies"
+ *                 details:
+ *                   type: string
+ *                   description: Detailed error message (development only)
+ *                   example: "Database connection error"
+ */
 app.get('/movies', async (req, res) => {
     try {
         const query = `
@@ -383,7 +793,113 @@ app.get('/movies', async (req, res) => {
     }
 });
 
-// Update a movie and its screenings
+
+
+/**
+ * @swagger
+ * /movies/{id}:
+ *   put:
+ *     tags:
+ *       - Movies
+ *     summary: Update a movie and its screenings
+ *     description: Updates movie details and replaces all screening times (uses transaction)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Movie ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - duration
+ *               - start_date
+ *               - end_date
+ *               - screenings
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Inception"
+ *               description:
+ *                 type: string
+ *                 example: "A mind-bending thriller"
+ *               duration:
+ *                 type: integer
+ *                 example: 148
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2023-06-01"
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2023-06-30"
+ *               screenings:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: date-time
+ *                 example: ["2023-06-01T18:00:00", "2023-06-02T20:30:00"]
+ *     responses:
+ *       200:
+ *         description: Movie updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Movie updated successfully"
+ *                 screeningsUpdated:
+ *                   type: integer
+ *                   example: 2
+ *       400:
+ *         description: Bad request - validation errors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   examples:
+ *                     invalidId: "Invalid movie ID"
+ *                     missingFields: "Missing required fields"
+ *                     invalidScreenings: "Screenings must be an array"
+ *       404:
+ *         description: Movie not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Movie not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to update movie"
+ *                 details:
+ *                   type: string
+ *                   description: Detailed error message (development only)
+ *                   example: "Database connection error"
+ *     security:
+ *       - cookieAuth: []
+ */
 app.put('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
@@ -469,7 +985,72 @@ app.put('/movies/:id', async (req, res) => {
     }
 });
 
-// Delete a movie
+/**
+ * @swagger
+ * /movies/{id}:
+ *   delete:
+ *     tags:
+ *       - Movies
+ *     summary: Delete a movie and its screenings
+ *     description: Deletes a movie and all associated screening times (uses transaction)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Movie ID to delete
+ *     responses:
+ *       200:
+ *         description: Movie deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Movie deleted successfully"
+ *                 screeningsDeleted:
+ *                   type: integer
+ *                   example: 1
+ *       400:
+ *         description: Invalid movie ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid movie ID"
+ *       404:
+ *         description: Movie not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Movie not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to delete movie"
+ *                 details:
+ *                   type: string
+ *                   description: Detailed error message (development only)
+ *                   example: "Database connection error"
+ *     security:
+ *       - cookieAuth: []
+ */
 app.delete('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
@@ -545,7 +1126,130 @@ app.delete('/movies/:id', async (req, res) => {
 
 
 
-
+/**
+ * @swagger
+ * /movies/playing:
+ *   get:
+ *     tags:
+ *       - Movies
+ *     summary: Get movies playing on a specific date
+ *     description: Returns movies with their screening times for a given date
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *           example: "2023-12-31"
+ *         description: Date to check for screenings (YYYY-MM-DD format)
+ *     responses:
+ *       200:
+ *         description: List of movies with screenings for the requested date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                   example: "2023-12-31"
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       title:
+ *                         type: string
+ *                         example: "Inception"
+ *                       description:
+ *                         type: string
+ *                         example: "A mind-bending thriller"
+ *                       duration:
+ *                         type: integer
+ *                         example: 148
+ *                       start_date:
+ *                         type: string
+ *                         format: date
+ *                         example: "2023-12-01"
+ *                       end_date:
+ *                         type: string
+ *                         format: date
+ *                         example: "2023-12-31"
+ *                       screenings:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                           format: time
+ *                           example: "18:00:00"
+ *                       screeningIds:
+ *                         type: array
+ *                         items:
+ *                           type: integer
+ *                           example: 42
+ *       400:
+ *         description: Invalid date parameter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Date parameter is required"
+ *                     example:
+ *                       type: string
+ *                       example: "/movies/playing?date=2023-12-31"
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Invalid date format. Please use YYYY-MM-DD format"
+ *                     received:
+ *                       type: string
+ *                     example:
+ *                       type: string
+ *                       example: "2023-12-31"
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Invalid date value"
+ *                     received:
+ *                       type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to fetch currently playing movies"
+ *                 details:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                     stack:
+ *                       type: string
+ *                   description: Only shown in development environment
+ */
 app.get('/movies/playing', async (req, res) => {    
     try {
 
@@ -681,7 +1385,86 @@ app.get('/movies/playing', async (req, res) => {
 
 
 
-// Get screening details (for ReserveSeat page)
+/**
+ * @swagger
+ * /screenings/{id}:
+ *   get:
+ *     tags:
+ *       - Screenings
+ *     summary: Get screening details with reserved seats
+ *     description: Returns screening information including movie details and reserved seats
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Screening ID
+ *     responses:
+ *       200:
+ *         description: Screening details with reserved seats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     screening:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                           example: 1
+ *                         movie_id:
+ *                           type: integer
+ *                           example: 5
+ *                         screening_time:
+ *                           type: string
+ *                           format: date-time
+ *                           example: "2023-12-15 18:00:00"
+ *                         title:
+ *                           type: string
+ *                           example: "Inception"
+ *                         duration:
+ *                           type: integer
+ *                           example: 148
+ *                         formatted_time:
+ *                           type: string
+ *                           example: "2023-12-15 18:00:00"
+ *                     reservedSeats:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                         example: "A12"
+ *       404:
+ *         description: Screening not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Screening not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to fetch screening"
+ */
 app.get('/screenings/:id', async (req, res) => {
     try {
         const screeningId = req.params.id;
@@ -718,7 +1501,87 @@ app.get('/screenings/:id', async (req, res) => {
     }
 });
 
-// Create reservation
+/**
+ * @swagger
+ * /reservations:
+ *   post:
+ *     tags:
+ *       - Reservations
+ *     summary: Create a new reservation
+ *     description: Reserve a seat for a specific screening (requires authentication)
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - screening_id
+ *               - seat_number
+ *             properties:
+ *               screening_id:
+ *                 type: integer
+ *                 example: 1
+ *               seat_number:
+ *                 type: string
+ *                 example: "A12"
+ *     responses:
+ *       200:
+ *         description: Reservation created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Missing required fields"
+ *       401:
+ *         description: Unauthorized (not authenticated)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Not authenticated"
+ *       409:
+ *         description: Conflict (seat already reserved)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Seat already reserved"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to create reservation"
+ */
 app.post('/reservations', async (req, res) => {
     try {
         if (!req.session.user) {
@@ -760,7 +1623,74 @@ app.post('/reservations', async (req, res) => {
 
 
 
-// Get user's reservations
+/**
+ * @swagger
+ * /reservations/my:
+ *   get:
+ *     tags:
+ *       - Reservations
+ *     summary: Get current user's reservations
+ *     description: Returns all reservations for the authenticated client user
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user's reservations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 3
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 5
+ *                       seat_number:
+ *                         type: string
+ *                         example: "A12"
+ *                       reservation_time:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2023-12-01 14:30:00"
+ *                       screening_id:
+ *                         type: integer
+ *                         example: 10
+ *                       screening_time:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2023-12-15 18:00:00"
+ *                       movie_title:
+ *                         type: string
+ *                         example: "Inception"
+ *                       duration:
+ *                         type: integer
+ *                         example: 148
+ *       401:
+ *         description: Unauthorized (not authenticated or wrong role)
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to fetch reservations"
+ */
 app.get('/reservations/my', requireRole(['client']), async (req, res) => {
     try {
         const [reservations] = await db.promise().query(`
@@ -816,10 +1746,85 @@ app.get('/reservations/my', requireRole(['client']), async (req, res) => {
 
 
 
+/**
+ * @swagger
+ * /screenings_stats:
+ *   get:
+ *     tags:
+ *       - Screenings
+ *     summary: Get screening statistics
+ *     description: Retrieve statistics for upcoming screenings (employee only)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Screening statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 10
+ *                       movie_title:
+ *                         type: string
+ *                         example: "Inception"
+ *                       duration:
+ *                         type: integer
+ *                         example: 148
+ *                       screening_time:
+ *                         type: string
+ *                         format: date-time
+ *                         example: "2023-12-15 18:00:00"
+ *                       reserved_seats:
+ *                         type: integer
+ *                         example: 42
+ *                       total_seats:
+ *                         type: integer
+ *                         example: 80
+ *                       reserved_seat_numbers:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                         example: ["A1", "A2", "B5"]
+ *                       available_seats:
+ *                         type: integer
+ *                         example: 38
+ *                       occupancy_rate:
+ *                         type: integer
+ *                         example: 53
+ *       401:
+ *         description: Unauthorized (not authenticated)
+ *       403:
+ *         description: Forbidden (not employee/manager/admin)
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to fetch screening statistics"
+ */
 
 
-
-// Get all screenings with statistics (for employees)
 app.get('/screenings_stats', requireRole(['employee']), async (req, res) => {
     try {
         const currentDate = new Date().toISOString().split('T')[0];
@@ -896,8 +1901,62 @@ app.get('/screenings_stats', requireRole(['employee']), async (req, res) => {
 
 
 
-
-// Get all users (admin only)
+/**
+ * @swagger
+ * /admin/users:
+ *   get:
+ *     tags:
+ *       - Admin
+ *     summary: Get all users
+ *     description: Retrieve a list of all users (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       username:
+ *                         type: string
+ *                         example: "admin_user"
+ *                       role:
+ *                         type: string
+ *                         example: "admin"
+ *       401:
+ *         description: Unauthorized (not authenticated)
+ *       403:
+ *         description: Forbidden (not admin)
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to fetch users"
+ */
 app.get('/admin/users', requireRole(['admin']), async (req, res) => {
     try {
         const [users] = await db.promise().query(`
@@ -918,7 +1977,91 @@ app.get('/admin/users', requireRole(['admin']), async (req, res) => {
     }
 });
 
-// Update user role (admin only)
+
+/**
+ * @swagger
+ * /admin/users/{id}/role:
+ *   put:
+ *     tags:
+ *       - Admin
+ *     summary: Update user role
+ *     description: Change a user's role (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: ["client", "employee", "manager", "admin"]
+ *                 example: "manager"
+ *             required:
+ *               - role
+ *     responses:
+ *       200:
+ *         description: Role updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "User role updated successfully"
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "Invalid role"
+ *                     valid_roles:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["client", "employee", "manager", "admin"]
+ *                 - type: object
+ *                   properties:
+ *                     error:
+ *                       type: string
+ *                       example: "You cannot remove your own admin privileges"
+ *       401:
+ *         description: Unauthorized (not authenticated)
+ *       403:
+ *         description: Forbidden (not admin)
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to update user role"
+ */
+
 app.put('/admin/users/:id/role', requireRole(['admin']), async (req, res) => {
     try {
         const userId = req.params.id;
