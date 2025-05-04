@@ -33,7 +33,7 @@ function App() {
 					<Route path="/my-reservations" element={<ProtectedRoute roles={['client']}><MyReservations /></ProtectedRoute>} />
 					<Route path="/reservations" element={<ProtectedRoute roles={['employee', 'manager']}><Reservations /></ProtectedRoute>} />
 					<Route path="/manage" element={<ProtectedRoute roles={['manager']}><Manage /></ProtectedRoute>} />
-					<Route path="/admin-panel" element={<ProtectedRoute roles={['admin']}><AdminPanel /></ProtectedRoute>} />
+					<Route path="/admin-panel" element={<ProtectedRoute roles={['client']}><AdminPanel /></ProtectedRoute>} />
 					<Route path="*" element={<Navigate to="/" />} />
                     
 					<Route path="/movie-management" element={<ProtectedRoute roles={['client']}><MovieManagement /></ProtectedRoute>} />

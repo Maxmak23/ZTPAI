@@ -107,3 +107,72 @@ code {
     font-size: 1.2rem;
     margin-bottom: 20px;
 }
+
+
+
+/* Employee Dashboard Styles */
+.seat-map-preview {
+    max-width: 200px;
+}
+
+.seat-row {
+    display: flex;
+    justify-content: center;
+}
+
+.seat-sm {
+    width: 12px;
+    height: 12px;
+    margin: 1px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.seat-sm.available {
+    background-color: #28a745; /* Green for available */
+}
+
+.seat-sm.reserved {
+    background-color: #dc3545; /* Red for reserved */
+}
+
+.progress {
+    background-color: #e9ecef;
+}
+
+.seat-map-preview-container:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s;
+}
+
+/* Card styles for summary */
+.card .display-4 {
+    font-size: 2.5rem;
+    font-weight: 300;
+}
+
+
+
+
+
+/* Admin Panel Styles */
+.admin-role-badge {
+    font-size: 0.8rem;
+    padding: 0.35em 0.65em;
+}
+
+.admin-table th {
+    background-color: #343a40;
+    color: white;
+}
+
+.admin-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.dropdown-toggle {
+    min-width: 120px;
+}
+
+
+
