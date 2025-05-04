@@ -29,19 +29,19 @@ export const routeConfig = [
         path: "/my-reservations",
         label: "My Reservations",
         element: "MyReservations",
-        roles: ["client", "employee", "manager", "admin"] // All logged in users can see their reservations
+        roles: ["client"] // All logged in users can see their reservations
     },
     {
         path: "/movie-listings",
         label: "Movie Listings",
         element: "MovieListings",
-        roles: ["client", "employee", "manager", "admin"]
+        roles: ["client"]
     },
     {
         path: "/reserve/:id",
         label: "Reserve Seat",
         element: "ReserveSeat",
-        roles: ["client", "employee", "manager", "admin"],
+        roles: ["client"],
         hideInNav: true
     },
     
@@ -50,7 +50,7 @@ export const routeConfig = [
         path: "/employee-dashboard",
         label: "Employee Dashboard",
         element: "EmployeeDashboard",
-        roles: ["employee", "manager", "admin"]
+        roles: ["employee"]
     },
     
     // Manager routes
@@ -58,13 +58,13 @@ export const routeConfig = [
         path: "/movie-management",
         label: "Movie Management",
         element: "MovieManagement",
-        roles: ["manager", "admin"]
+        roles: ["manager"]
     },
     {
         path: "/manage",
         label: "Manage Screenings",
         element: "Manage",
-        roles: ["manager", "admin"]
+        roles: ["manager"]
     },
     
     // Admin routes
