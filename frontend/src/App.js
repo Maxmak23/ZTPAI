@@ -1,23 +1,13 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import { AuthProvider, AuthContext } from "./context/AuthContext";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import MyReservations from "./pages/MyReservations";
-import Reservations from "./pages/Reservations";
-import Manage from "./pages/Manage";
-import AdminPanel from "./pages/AdminPanel";
+import { routeConfig, getComponent } from "./config/routes";
 import Navbar from "./components/Navbar";
 import { useContext } from "react";
-import Main from "./pages/Main";
-
-import MovieManagement from "./pages/MovieManagement";
-import MovieListings from "./pages/MovieListings";
-import ReserveSeat from './pages/ReserveSeat';
-import EmployeeDashboard from './pages/EmployeeDashboard';
 
 const ProtectedRoute = ({ children, roles }) => {
     const { user } = useContext(AuthContext);
-    if (!user || !roles.includes(user.role)) return <Navigate to="/login" />;
+    if (!user) return <Navigate to="/login" />;
+    if (roles.length > 0 && !roles.includes(user.role)) return <Navigate to="/" />;
     return children;
 };
 
@@ -27,19 +17,25 @@ function App() {
             <Router>
                 <Navbar />
                 <Routes>
-					<Route path="/" element={<Main />} />
-					<Route path="/login" element={<Login />} />
-					<Route path="/register" element={<Register />} />
-					<Route path="/my-reservations" element={<ProtectedRoute roles={['client']}><MyReservations /></ProtectedRoute>} />
-					<Route path="/reservations" element={<ProtectedRoute roles={['employee', 'manager']}><Reservations /></ProtectedRoute>} />
-					<Route path="/manage" element={<ProtectedRoute roles={['manager']}><Manage /></ProtectedRoute>} />
-					<Route path="/admin-panel" element={<ProtectedRoute roles={['client']}><AdminPanel /></ProtectedRoute>} />
-					<Route path="*" element={<Navigate to="/" />} />
-                    
-					<Route path="/movie-management" element={<ProtectedRoute roles={['client']}><MovieManagement /></ProtectedRoute>} />
-					<Route path="/movie-listings" element={<ProtectedRoute roles={['client']}><MovieListings /></ProtectedRoute>} />
-                    <Route path="/reserve/:id" element={<ReserveSeat />} />
-                    <Route path="/employee-dashboard" element={<EmployeeDashboard />} />
+                    {routeConfig.map((route) => {
+                        const Component = getComponent(route.element);
+                        return (
+                            <Route
+                                key={route.path}
+                                path={route.path}
+                                element={
+                                    route.isPublic ? (
+                                        <Component />
+                                    ) : (
+                                        <ProtectedRoute roles={route.roles}>
+                                            <Component />
+                                        </ProtectedRoute>
+                                    )
+                                }
+                            />
+                        );
+                    })}
+                    <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
             </Router>
         </AuthProvider>

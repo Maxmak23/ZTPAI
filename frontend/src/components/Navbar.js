@@ -2,27 +2,10 @@ import { Navbar, Nav, Container, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { routeConfig } from "../config/routes";
 
 const NavigationBar = () => {
     const { user, logout } = useContext(AuthContext);
-
-    const navItems = [
-        { path: "/", label: "Home", roles: ["client", "employee", "manager", "admin"] },
-        { path: "/my-reservations", label: "My Reservations", roles: ["client"] },
-        { path: "/reservations", label: "Reservations", roles: ["employee", "manager"] },
-        { path: "/manage", label: "Manage", roles: ["manager"] },
-        { path: "/admin-panel", label: "Admin Panel", roles: ["admin"] },
-        { path: "/movie-management", label: "Movie management", roles: ["client"] },
-        { path: "/movie-listings", label: "Movie listings", roles: ["client"] },
-        { path: "/employee-dashboard", label: "Employee Dashboard", roles: ["client"] },
-        { path: "/admin-panel", label: "Admin Panel", roles: ["client"] }
-    ];
-
-    // Check if user has access to a specific path
-    const hasAccess = (requiredRoles) => {
-        return user && requiredRoles.includes(user.role);
-    };    
-
 
     return (
         <Navbar bg="dark" variant="dark" expand="lg">
@@ -31,19 +14,31 @@ const NavigationBar = () => {
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
-                        {navItems.map((item) => (
-                            hasAccess(item.roles) && (
-                                <Nav.Link key={item.path} as={Link} to={item.path}>
-                                    {item.label}
-                                </Nav.Link>
+                        {routeConfig
+                            .filter(route => !route.hideInNav)
+                            .filter(route => 
+                                // Show public routes or routes user has access to
+                                route.isPublic || 
+                                (user && route.roles.includes(user.role))
                             )
-                        ))}
+                            .filter(route => 
+                                !route.hideWhenLoggedIn || !user
+                            )
+                            .map((route) => (
+                                <Nav.Link 
+                                    key={route.path} 
+                                    as={Link} 
+                                    to={route.path}
+                                >
+                                    {route.label}
+                                </Nav.Link>
+                            ))}
                     </Nav>
                     <Nav>
                         {user ? (
                             <>
                                 <Navbar.Text className="me-3">
-                                    Logged in as: {user.username}
+                                    Logged in as: {user.username} ({user.role})
                                 </Navbar.Text>
                                 <Button variant="outline-light" onClick={logout}>
                                     Logout
@@ -51,8 +46,17 @@ const NavigationBar = () => {
                             </>
                         ) : (
                             <>
-                                <Nav.Link as={Link} to="/login">Login</Nav.Link>
-                                <Nav.Link as={Link} to="/register">Register</Nav.Link>
+                                {routeConfig
+                                    .filter(route => route.hideWhenLoggedIn)
+                                    .map((route) => (
+                                        <Nav.Link 
+                                            key={route.path} 
+                                            as={Link} 
+                                            to={route.path}
+                                        >
+                                            {route.label}
+                                        </Nav.Link>
+                                    ))}
                             </>
                         )}
                     </Nav>
