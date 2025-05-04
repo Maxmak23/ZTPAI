@@ -19,7 +19,13 @@ app.use(session({
     secret: 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // set to true if using HTTPS
+    //cookie: { secure: false } // set to true if using HTTPS
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+        httpOnly: true, // Prevent client-side JS access
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // For cross-site cookies
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+    },    
 }));
 
 
@@ -52,7 +58,8 @@ db.getConnection((err, connection) => {
 // Middleware with error handling
 app.use(cors({ 
     origin: "http://localhost:3000", 
-    credentials: true 
+    credentials: true,
+    exposedHeaders: ['set-cookie'] // Ensure cookies can be set
 }));
 
 app.use(express.json());
@@ -63,6 +70,50 @@ app.use((err, req, res, next) => {
     console.error('Unhandled error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
+
+
+
+function requireRole(acceptedRoles) {
+    return (req, res, next) => {
+        // Debugging logs
+        //console.log('Session ID:', req.sessionID);
+        //console.log('Session data:', req.session);
+        
+        // Check if user is authenticated
+        if (!req.session.user) {
+            console.log('No session user found - headers:', req.headers);
+            return res.status(401).json({ 
+                error: 'Unauthorized - please log in first',
+                sessionInfo: process.env.NODE_ENV === 'development' ? {
+                    sessionId: req.sessionID,
+                    session: req.session
+                } : undefined
+            });
+        }
+
+        // Check if user has one of the required roles
+        if (!acceptedRoles.includes(req.session.user.role)) {
+            return res.status(403).json({ 
+                error: `Access denied. Your role (${req.session.user.role}) is not authorized.`,
+                requiredRoles: acceptedRoles,
+                yourRole: req.session.user.role
+            });
+        }
+
+        next();
+    };
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -139,6 +190,8 @@ app.post("/login", async (req, res) => {
             username: user.username, 
             role: user.role 
         };
+
+        console.log(req.session.user);
         
         res.json({ 
             message: "Login successful", 
@@ -301,6 +354,7 @@ app.post('/movies', async (req, res) => {
 });
 
 // Get all movies with their screenings
+//, requireRole(['manager'])
 app.get('/movies', async (req, res) => {
     try {
         const query = `
@@ -707,12 +761,8 @@ app.post('/reservations', async (req, res) => {
 
 
 // Get user's reservations
-app.get('/reservations/my', async (req, res) => {
+app.get('/reservations/my', requireRole(['client']), async (req, res) => {
     try {
-        if (!req.session.user) {
-            return res.status(401).json({ error: 'Not authenticated' });
-        }
-        
         const [reservations] = await db.promise().query(`
             SELECT 
                 r.id, 
@@ -770,12 +820,8 @@ app.get('/reservations/my', async (req, res) => {
 
 
 // Get all screenings with statistics (for employees)
-app.get('/screenings_stats', async (req, res) => {
+app.get('/screenings_stats', requireRole(['employee']), async (req, res) => {
     try {
-        // if (!req.session.user || req.session.user.role !== 'employee') {
-        //     return res.status(403).json({ error: 'Access denied' });
-        // }
-
         const currentDate = new Date().toISOString().split('T')[0];
         
         const [screenings] = await db.promise().query(`
@@ -851,16 +897,9 @@ app.get('/screenings_stats', async (req, res) => {
 
 
 
-
-
-
 // Get all users (admin only)
-app.get('/admin/users', async (req, res) => {
+app.get('/admin/users', requireRole(['admin']), async (req, res) => {
     try {
-        // if (!req.session.user || req.session.user.role !== 'admin') {
-        //     return res.status(403).json({ error: 'Access denied' });
-        // }
-
         const [users] = await db.promise().query(`
             SELECT id, username, role 
             FROM users
@@ -880,12 +919,8 @@ app.get('/admin/users', async (req, res) => {
 });
 
 // Update user role (admin only)
-app.put('/admin/users/:id/role', async (req, res) => {
+app.put('/admin/users/:id/role', requireRole(['admin']), async (req, res) => {
     try {
-        // if (!req.session.user || req.session.user.role !== 'admin') {
-        //     return res.status(403).json({ error: 'Access denied' });
-        // }
-
         const userId = req.params.id;
         const { role } = req.body;
         const validRoles = ['client', 'employee', 'manager', 'admin'];
