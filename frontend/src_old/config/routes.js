@@ -60,6 +60,12 @@ export const routeConfig = [
         element: "MovieManagement",
         roles: ["manager"]
     },
+    {
+        path: "/manage",
+        label: "Manage Screenings",
+        element: "Manage",
+        roles: ["manager"]
+    },
     
     // Admin routes
     {
