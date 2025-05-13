@@ -1,6 +1,9 @@
+
+const express = require('express');
+const movieControler = express.movieControler();
 const { insertMovie } = require("../repositories/movieRepositories");
 
-app.post('/movies', async (req, res) => {
+movieControler.post('/movies', async (req, res) => {
     try {
         const { title, description, duration, start_date, end_date, screenings } = req.body;
 
@@ -75,7 +78,7 @@ app.post('/movies', async (req, res) => {
     }
 });
 
-app.get('/movies', async (req, res) => {
+movieControler.get('/movies', async (req, res) => {
     try {
         // const query = `
         //     SELECT movies.*, GROUP_CONCAT(screenings.screening_time) AS screening_times
@@ -105,7 +108,7 @@ app.get('/movies', async (req, res) => {
 });
 
 
-app.put('/movies/:id', async (req, res) => {
+movieControler.put('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
         const { title, description, duration, start_date, end_date, screenings } = req.body;
@@ -195,7 +198,7 @@ app.put('/movies/:id', async (req, res) => {
 
 
 
-app.get('/movies/playing', async (req, res) => {    
+movieControler.get('/movies/playing', async (req, res) => {    
     try {
 
         // Validate date parameter
@@ -251,7 +254,7 @@ app.get('/movies/playing', async (req, res) => {
         
         // // Using promise-based query with connection pooling
         // const [results] = await db.promise().query(query, [formattedDate, formattedDate, formattedDate]);
-        const results = await movieList(formattedDate, formattedDate, formattedDate);
+        const [results] = await movieList(formattedDate, formattedDate, formattedDate);
         
         // Process results
         var movies = results.map(movie => ({
@@ -324,7 +327,7 @@ app.get('/movies/playing', async (req, res) => {
 
 
 
-app.delete('/movies/:id', async (req, res) => {
+movieControler.delete('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
 
@@ -382,3 +385,8 @@ app.delete('/movies/:id', async (req, res) => {
         });
     }
 });
+
+
+
+
+module.exports = movieControler;

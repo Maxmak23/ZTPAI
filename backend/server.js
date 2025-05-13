@@ -13,6 +13,8 @@ const session = require("express-session");
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 
+const movieControler = require("./src/controllers/movieControler");
+const authenticationControler = require("./src/controllers/authenticationControler");
 const app = express();
 //const PORT = process.env.PORT || 5000;
 const PORT = 5000;
@@ -140,7 +142,8 @@ const specs = swaggerJsdoc(options);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 
-
+app.use('/', movieControler);
+app.use('/', authenticationControler);
 
 
 

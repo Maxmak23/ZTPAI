@@ -1,6 +1,8 @@
+const express = require('express');
+const authenticationControler = express.authenticationControler();
 const { getLoginStatus } = require("../repositories/authenticationRepository");
 
-app.post("/register", async (req, res) => {
+authenticationControler.post("/register", async (req, res) => {
     try {
         const { username, password, role } = req.body;
         
@@ -44,7 +46,7 @@ app.post("/register", async (req, res) => {
 
 
 
-app.post("/login", async (req, res) => {
+authenticationControler.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
         
@@ -88,7 +90,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-app.post("/logout", (req, res) => {
+authenticationControler.post("/logout", (req, res) => {
     try {
         req.session.destroy(err => {
             if (err) {
@@ -110,7 +112,7 @@ app.post("/logout", (req, res) => {
 
 
 
-app.get("/auth", (req, res) => {
+authenticationControler.get("/auth", (req, res) => {
     try {
         if (req.session && req.session.user) {
             res.json({ 
@@ -128,3 +130,5 @@ app.get("/auth", (req, res) => {
         });
     }
 });
+
+module.exports = authenticationControler;
