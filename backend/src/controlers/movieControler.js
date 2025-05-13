@@ -1,3 +1,4 @@
+const { insertMovie } = require("../repositories/movieRepositories");
 
 app.post('/movies', async (req, res) => {
     try {
@@ -29,10 +30,11 @@ app.post('/movies', async (req, res) => {
 
         try {
             // Insert movie
-            const [movieResult] = await connection.query(
-                "INSERT INTO movies (title, description, duration, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-                [title, description, duration, start_date, end_date]
-            );
+            // const [movieResult] = await connection.query(
+            //     "INSERT INTO movies (title, description, duration, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
+            //     [title, description, duration, start_date, end_date]
+            // );
+            const [movieResult] = await insertMovie(title, description, duration, start_date, end_date);
             
             const movieId = movieResult.insertId;
 
@@ -75,14 +77,15 @@ app.post('/movies', async (req, res) => {
 
 app.get('/movies', async (req, res) => {
     try {
-        const query = `
-            SELECT movies.*, GROUP_CONCAT(screenings.screening_time) AS screening_times
-            FROM movies
-            LEFT JOIN screenings ON movies.id = screenings.movie_id
-            GROUP BY movies.id
-        `;
+        // const query = `
+        //     SELECT movies.*, GROUP_CONCAT(screenings.screening_time) AS screening_times
+        //     FROM movies
+        //     LEFT JOIN screenings ON movies.id = screenings.movie_id
+        //     GROUP BY movies.id
+        // `;
 
-        const [results] = await db.promise().query(query);
+        // const [results] = await db.promise().query(query);
+        const results = await getMovies();
 
         const movies = results.map(movie => ({
             ...movie,
@@ -149,10 +152,12 @@ app.put('/movies/:id', async (req, res) => {
                     if (!time) {
                         throw new Error('Invalid screening time');
                     }
-                    return connection.query(
-                        "INSERT INTO screenings (movie_id, screening_time) VALUES (?, ?)",
-                        [movieId, time]
-                    );
+                    // return connection.query(
+                    //     "INSERT INTO screenings (movie_id, screening_time) VALUES (?, ?)",
+                    //     [movieId, time]
+                    // );
+                    return addScreenings(movieId, time);
+                    
                 });
 
                 await Promise.all(screeningPromises);
@@ -224,28 +229,29 @@ app.get('/movies/playing', async (req, res) => {
         // Format the date to ensure MySQL compatibility
         const formattedDate = parsedDate.toISOString().split('T')[0];
 
-        const query = `
-            SELECT 
-                m.*,
-                GROUP_CONCAT(
-                    TIME_FORMAT(s.screening_time, '%H:%i:%s')
-                    ORDER BY s.screening_time
-                ) AS screenings,
-                GROUP_CONCAT(s.id ORDER BY s.screening_time) AS screeningIds
-            FROM 
-                movies m
-            LEFT JOIN 
-                screenings s ON m.id = s.movie_id
-                AND DATE(s.screening_time) = ?
-            WHERE 
-                m.start_date <= ? AND 
-                m.end_date >= ?
-            GROUP BY 
-                m.id
-        `;
+        // const query = `
+        //     SELECT 
+        //         m.*,
+        //         GROUP_CONCAT(
+        //             TIME_FORMAT(s.screening_time, '%H:%i:%s')
+        //             ORDER BY s.screening_time
+        //         ) AS screenings,
+        //         GROUP_CONCAT(s.id ORDER BY s.screening_time) AS screeningIds
+        //     FROM 
+        //         movies m
+        //     LEFT JOIN 
+        //         screenings s ON m.id = s.movie_id
+        //         AND DATE(s.screening_time) = ?
+        //     WHERE 
+        //         m.start_date <= ? AND 
+        //         m.end_date >= ?
+        //     GROUP BY 
+        //         m.id
+        // `;
         
-        // Using promise-based query with connection pooling
-        const [results] = await db.promise().query(query, [formattedDate, formattedDate, formattedDate]);
+        // // Using promise-based query with connection pooling
+        // const [results] = await db.promise().query(query, [formattedDate, formattedDate, formattedDate]);
+        const results = await movieList(formattedDate, formattedDate, formattedDate);
         
         // Process results
         var movies = results.map(movie => ({
