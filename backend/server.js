@@ -203,6 +203,7 @@ app.use('/', authenticationControler);
  *                   type: integer
  *                   example: 42
  */
+/*authenticationControler_1--------------------------------------------------------------------------------
 app.post("/register", async (req, res) => {
     try {
         const { username, password, role } = req.body;
@@ -241,6 +242,7 @@ app.post("/register", async (req, res) => {
         });
     }
 });
+*/
 
 /**
  * @swagger
@@ -326,6 +328,7 @@ app.post("/register", async (req, res) => {
  *                   description: Detailed error message (development only)
  *                   example: "Database connection error"
  */
+/*authenticationControler_2--------------------------------------------------------------------------------
 app.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -370,6 +373,7 @@ app.post("/login", async (req, res) => {
         });
     }
 });
+*/
 
 /**
  * @swagger
@@ -489,6 +493,7 @@ app.get("/auth", (req, res) => {
  *     security:
  *       - cookieAuth: []
  */
+/*authenticationControler_3--------------------------------------------------------------------------------
 app.post("/logout", (req, res) => {
     try {
         req.session.destroy(err => {
@@ -508,6 +513,7 @@ app.post("/logout", (req, res) => {
         });
     }
 });
+*/
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
@@ -633,6 +639,7 @@ process.on('uncaughtException', (err) => {
  *     security:
  *       - cookieAuth: []
  */
+/*  movieControler_1--------------------------------------------------------------------------------
 app.post('/movies', async (req, res) => {
     try {
         const { title, description, duration, start_date, end_date, screenings } = req.body;
@@ -706,7 +713,7 @@ app.post('/movies', async (req, res) => {
         });
     }
 });
-
+*/
 
 
 /**
@@ -768,6 +775,8 @@ app.post('/movies', async (req, res) => {
  *                   description: Detailed error message (development only)
  *                   example: "Database connection error"
  */
+
+/* movieControler_2--------------------------------------------------------------------------------
 app.get('/movies', async (req, res) => {
     try {
         const query = `
@@ -795,7 +804,7 @@ app.get('/movies', async (req, res) => {
         });
     }
 });
-
+*/
 
 
 /**
@@ -903,6 +912,7 @@ app.get('/movies', async (req, res) => {
  *     security:
  *       - cookieAuth: []
  */
+/* movieControler_3--------------------------------------------------------------------------------
 app.put('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
@@ -987,6 +997,7 @@ app.put('/movies/:id', async (req, res) => {
         });
     }
 });
+*/
 
 /**
  * @swagger
@@ -1054,6 +1065,7 @@ app.put('/movies/:id', async (req, res) => {
  *     security:
  *       - cookieAuth: []
  */
+/* movieControler_5--------------------------------------------------------------------------------
 app.delete('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
@@ -1112,7 +1124,7 @@ app.delete('/movies/:id', async (req, res) => {
         });
     }
 });
-
+*/
 
 
 
@@ -1253,6 +1265,7 @@ app.delete('/movies/:id', async (req, res) => {
  *                       type: string
  *                   description: Only shown in development environment
  */
+/* movieControler_4--------------------------------------------------------------------------------
 app.get('/movies/playing', async (req, res) => {    
     try {
 
@@ -1357,6 +1370,7 @@ app.get('/movies/playing', async (req, res) => {
         });
     }
 });
+*/
 
 
 
