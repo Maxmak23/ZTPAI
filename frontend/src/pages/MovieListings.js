@@ -7,6 +7,7 @@ import './style/MovieListings.css';
 const MovieListings = () => {
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [rooms, setRooms] = useState([]);
     const currentDate = new Date().toISOString().split('T')[0];
 
     const fetchMovies = async () => {
@@ -26,8 +27,14 @@ const MovieListings = () => {
         }
     };
 
+    const fetchRooms = async () => {
+        const response = await axios.get('http://localhost:5000/rooms');
+        setRooms(response.data);
+    };
+
     useEffect(() => {
         fetchMovies();
+        fetchRooms();
     }, []);
 
     const formatTime = (time) => {
@@ -64,8 +71,8 @@ const MovieListings = () => {
                                 <Card.Body>
                                     <Card.Title>{movie.title}</Card.Title>
                                     <Card.Text className="text-muted small">
-                                        {movie.duration} min | {movie.start_date.split('T')[0]} to {movie.end_date.split('T')[0]}
-                                    </Card.Text>
+                                        {movie.duration} min | {movie.start_date.split('T')[0]} to {movie.end_date.split('T')[0]} | {rooms[movie.room-1].name}
+                                    </Card.Text>    
                                     <Card.Text>{movie.description}</Card.Text>
                                 </Card.Body>
                                 <Card.Footer>

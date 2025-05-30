@@ -102,7 +102,7 @@ const requireRole = require('../middleware/auth');
  */
 router.post('/movies', async (req, res) => {
     try {
-        const { title, description, duration, start_date, end_date, screenings } = req.body;
+        const { title, description, duration, start_date, end_date, screenings, room } = req.body;
 
         // Validate required fields
         if (!title || !duration || !start_date || !end_date) {
@@ -131,8 +131,8 @@ router.post('/movies', async (req, res) => {
         try {
             // Insert movie
             const [movieResult] = await connection.query(
-                "INSERT INTO movies (title, description, duration, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
-                [title, description, duration, start_date, end_date]
+                "INSERT INTO movies (title, description, duration, start_date, end_date, room) VALUES (?, ?, ?, ?, ?, ?)",
+                [title, description, duration, start_date, end_date, room]
             );
             
             const movieId = movieResult.insertId;
@@ -373,7 +373,7 @@ router.get('/movies', async (req, res) => {
 router.put('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
-        const { title, description, duration, start_date, end_date, screenings } = req.body;
+        const { title, description, duration, start_date, end_date, screenings, room } = req.body;
 
         // Validate movie ID
         if (isNaN(movieId)) {
@@ -397,8 +397,8 @@ router.put('/movies/:id', async (req, res) => {
         try {
             // Update movie
             const [updateResult] = await connection.query(
-                "UPDATE movies SET title = ?, description = ?, duration = ?, start_date = ?, end_date = ? WHERE id = ?",
-                [title, description, duration, start_date, end_date, movieId]
+                "UPDATE movies SET title = ?, description = ?, duration = ?, start_date = ?, end_date = ?, room = ? WHERE id = ?",
+                [title, description, duration, start_date, end_date, room, movieId]
             );
 
             if (updateResult.affectedRows === 0) {
@@ -824,5 +824,48 @@ router.get('/movies/playing', async (req, res) => {
         });
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+router.get('/rooms', async (req, res) => {
+    try {
+        const query = `
+            SELECT * FROM room
+        `;
+
+        const [results] = await db.promise().query(query);
+
+        res.json(results);
+
+    } catch (err) {
+        console.error('Get movies error:', err);
+        res.status(500).json({ 
+            error: 'Failed to fetch movies',
+            details: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
+    }
+});
+
+
 
 module.exports = router;
