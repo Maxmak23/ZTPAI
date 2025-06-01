@@ -176,42 +176,38 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
     try {
         const { username, password } = req.body;
-        
-        // Validate input
+
         if (!username || !password) {
             return res.status(400).json({ error: 'Missing username or password' });
         }
 
-        const query = "SELECT * FROM users WHERE username = ?";
-        const [results] = await db.promise().query(query, [username]);
-        
-        if (results.length === 0) {
+        const users = await findUserByUsername(username);
+        if (users.length === 0) {
             return res.status(401).json({ error: "Invalid credentials" });
         }
 
-        const user = results[0];
+        const user = users[0];
         const isMatch = await bcrypt.compare(password, user.password);
-        
+
         if (!isMatch) {
             return res.status(401).json({ error: "Invalid credentials" });
         }
-        
-        // Create a session
-        req.session.user = { 
-            id: user.id, 
-            username: user.username, 
-            role: user.role 
+
+        req.session.user = {
+            id: user.id,
+            username: user.username,
+            role: user.role
         };
 
         console.log(req.session.user);
-        
-        res.json({ 
-            message: "Login successful", 
-            user: req.session.user 
+
+        res.json({
+            message: "Login successful",
+            user: req.session.user
         });
     } catch (err) {
         console.error('Login error:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Login failed',
             details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
