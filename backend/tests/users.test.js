@@ -1,5 +1,5 @@
 const request = require('supertest');
-const app = require('../../testServer'); // <- your test server
+const app = require('../testServer'); // <- your test server
 
 describe('GET /admin/users', () => {
     it('should return 401 if not authenticated as admin', async () => {

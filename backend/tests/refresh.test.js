@@ -1,7 +1,7 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
-const app = require('../../testServer');
-const deleteUserByUsername = require('../../services/deleteUserByUsername');
+const app = require('../testServer');
+const deleteUserByUsername = require('../services/deleteUserByUsername');
 
 describe('POST /refresh', () => {
     const username = 'TestRefreshUser';

@@ -1,6 +1,6 @@
 const request = require('supertest');
-const app = require('../../testServer');
-const deleteUserByUsername = require('../../services/deleteUserByUsername');
+const app = require('../testServer');
+const deleteUserByUsername = require('../services/deleteUserByUsername');
 
 describe('PUT /admin/users/:id/role', () => {
     let agent;
