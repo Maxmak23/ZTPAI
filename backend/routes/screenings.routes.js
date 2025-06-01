@@ -5,6 +5,7 @@ const db = require('../config/db');
 const requireRole = require('../middleware/auth');
 const getScreeningDetails = require('../services/getScreeningDetails');
 const getReservedSeats = require('../services/getReservedSeats');
+const getUpcomingScreeningStats = require('../services/getUpcomingScreeningStats');
 
 
 
@@ -198,55 +199,21 @@ router.get('/screenings/:id', async (req, res) => {
 router.get('/screenings_stats', requireRole.check(['employee']), async (req, res) => {
     try {
         const currentDate = new Date().toISOString().split('T')[0];
-        
-        const [screenings] = await db.promise().query(`
-            SELECT 
-                s.id,
-                m.title as movie_title,
-                m.duration,
-                DATE_FORMAT(s.screening_time, '%Y-%m-%d %H:%i:%s') as screening_time,
-                (
-                    SELECT COUNT(*) 
-                    FROM reservations r 
-                    WHERE r.screening_id = s.id
-                ) as reserved_seats,
-                80 as total_seats,  -- Assuming 8 rows x 10 seats = 80 seats total
-                (
-                    SELECT GROUP_CONCAT(r.seat_number)
-                    FROM reservations r
-                    WHERE r.screening_id = s.id
-                ) as reserved_seat_numbers
-            FROM 
-                screenings s
-            JOIN 
-                movies m ON s.movie_id = m.id
-            WHERE 
-                DATE(s.screening_time) >= ?
-                AND m.end_date >= ?
-            ORDER BY 
-                s.screening_time ASC
-        `, [currentDate, currentDate]);
-        
-        // Process results
-        const processed = screenings.map(screening => ({
-            ...screening,
-            reserved_seat_numbers: screening.reserved_seat_numbers 
-                ? screening.reserved_seat_numbers.split(',') 
-                : [],
-            available_seats: screening.total_seats - screening.reserved_seats,
-            occupancy_rate: Math.round((screening.reserved_seats / screening.total_seats) * 100)
-        }));
-        
+        const screenings = await getUpcomingScreeningStats(currentDate);
+
         res.json({
             success: true,
-            count: processed.length,
-            data: processed
+            count: screenings.length,
+            data: screenings
         });
-        
+
     } catch (err) {
         console.error('Error fetching screening statistics:', err);
         res.status(500).json({ success: false, error: 'Failed to fetch screening statistics' });
     }
 });
+
+
+
 
 module.exports = router;
