@@ -5,6 +5,8 @@ const db = require('../config/db');
 const requireRole = require('../middleware/auth');
 const queue = require('../queue');
 
+const isSeatReserved = require('../services/isSeatReserved');
+const createReservation = require('../services/createReservation');
 
 
 
@@ -98,33 +100,22 @@ router.post('/reservations', async (req, res) => {
         if (!req.session.user) {
             return res.status(401).json({ error: 'Not authenticated' });
         }
-        
+
         const { screening_id, seat_number } = req.body;
-        
-        // Validate input
+
         if (!screening_id || !seat_number) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
-        
-        // Check if seat is already taken
-        const [existing] = await db.promise().query(
-            'SELECT id FROM reservations WHERE screening_id = ? AND seat_number = ?',
-            [screening_id, seat_number]
-        );
-        
-        if (existing.length > 0) {
+
+        const seatTaken = await isSeatReserved(screening_id, seat_number);
+        if (seatTaken) {
             return res.status(409).json({ error: 'Seat already reserved' });
         }
-        
-        // Create reservation
-        await db.promise().query(
-            'INSERT INTO reservations (user_id, screening_id, seat_number) VALUES (?, ?, ?)',
-            [req.session.user.id, screening_id, seat_number]
-        );
-        
+
+        await createReservation(req.session.user.id, screening_id, seat_number);
+
         res.json({ success: true });
 
-        // Queue task: Reservation confirmation (could trigger email later)
         await queue.enqueue({
             type: 'RESERVATION_CONFIRMATION',
             userId: req.session.user.id,
@@ -132,7 +123,7 @@ router.post('/reservations', async (req, res) => {
             seatNumber: seat_number,
             timestamp: new Date()
         });
-        
+
     } catch (err) {
         console.error('Error creating reservation:', err);
         res.status(500).json({ success: false, error: 'Failed to create reservation' });
