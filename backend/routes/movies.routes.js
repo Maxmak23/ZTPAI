@@ -8,6 +8,7 @@ const getAllMoviesWithScreenings = require('../services/getAllMoviesWithScreenin
 const updateMovieWithScreenings = require('../services/updateMovieWithScreenings');
 const deleteMovieWithScreenings = require('../services/deleteMovieWithScreenings');
 const getMoviesPlayingOnDate = require('../services/getMoviesPlayingOnDate');
+const getAllRooms = require('../services/getAllRooms');
 
 
 
@@ -688,18 +689,12 @@ router.get('/movies/playing', async (req, res) => {
 
 router.get('/rooms', async (req, res) => {
     try {
-        const query = `
-            SELECT * FROM room
-        `;
-
-        const [results] = await db.promise().query(query);
-
-        res.json(results);
-
+        const rooms = await getAllRooms();
+        res.json(rooms);
     } catch (err) {
-        console.error('Get movies error:', err);
+        console.error('Get rooms error:', err);
         res.status(500).json({ 
-            error: 'Failed to fetch movies',
+            error: 'Failed to fetch rooms',
             details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
     }
