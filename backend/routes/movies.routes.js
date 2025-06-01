@@ -6,6 +6,7 @@ const requireRole = require('../middleware/auth');
 const addMovieWithScreenings = require('../services/addMovieWithScreenings');
 const getAllMoviesWithScreenings = require('../services/getAllMoviesWithScreenings');
 const updateMovieWithScreenings = require('../services/updateMovieWithScreenings');
+const deleteMovieWithScreenings = require('../services/deleteMovieWithScreenings');
 
 
 
@@ -435,55 +436,25 @@ router.delete('/movies/:id', async (req, res) => {
     try {
         const movieId = req.params.id;
 
-        // Validate movie ID
         if (isNaN(movieId)) {
             return res.status(400).json({ error: 'Invalid movie ID' });
         }
 
-        // Start transaction (to delete both movie and its screenings)
-        const connection = await db.promise().getConnection();
-        await connection.beginTransaction();
+        const result = await deleteMovieWithScreenings(movieId);
 
-        try {
-            // First delete screenings (to maintain referential integrity)
-            await connection.query(
-                "DELETE FROM screenings WHERE movie_id = ?",
-                [movieId]
-            );
-
-            // Then delete the movie
-            const [result] = await connection.query(
-                "DELETE FROM movies WHERE id = ?",
-                [movieId]
-            );
-
-            if (result.affectedRows === 0) {
-                throw new Error('Movie not found');
-            }
-
-            await connection.commit();
-
-            res.json({ 
-                message: "Movie deleted successfully",
-                screeningsDeleted: result.affectedRows
-            });
-
-        } catch (transactionErr) {
-            await connection.rollback();
-            console.error('Transaction error:', transactionErr);
-            throw transactionErr;
-        } finally {
-            connection.release();
-        }
+        res.json({
+            message: "Movie deleted successfully",
+            ...result
+        });
 
     } catch (err) {
         console.error('Delete movie error:', err);
-        
+
         if (err.message === 'Movie not found') {
             return res.status(404).json({ error: err.message });
         }
 
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to delete movie',
             details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
