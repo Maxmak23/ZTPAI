@@ -3,7 +3,8 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const requireRole = require('../middleware/auth');
-
+const getScreeningDetails = require('../services/getScreeningDetails');
+const getReservedSeats = require('../services/getReservedSeats');
 
 
 
@@ -91,33 +92,22 @@ const requireRole = require('../middleware/auth');
 router.get('/screenings/:id', async (req, res) => {
     try {
         const screeningId = req.params.id;
-        
-        // Get screening with movie details
-        const [screening] = await db.promise().query(`
-            SELECT s.*, m.title, m.duration, DATE_FORMAT(s.screening_time, '%Y-%m-%d %H:%i:%s') as formatted_time
-            FROM screenings s
-            JOIN movies m ON s.movie_id = m.id
-            WHERE s.id = ?
-        `, [screeningId]);
-        
-        if (!screening.length) {
+
+        const screening = await getScreeningDetails(screeningId);
+        if (!screening) {
             return res.status(404).json({ error: 'Screening not found' });
         }
-        
-        // Get reserved seats for this screening
-        const [reservedSeats] = await db.promise().query(
-            'SELECT seat_number FROM reservations WHERE screening_id = ?',
-            [screeningId]
-        );
-        
+
+        const reservedSeats = await getReservedSeats(screeningId);
+
         res.json({
             success: true,
             data: {
-                screening: screening[0],
-                reservedSeats: reservedSeats.map(seat => seat.seat_number)
+                screening,
+                reservedSeats
             }
         });
-        
+
     } catch (err) {
         console.error('Error fetching screening:', err);
         res.status(500).json({ success: false, error: 'Failed to fetch screening' });
