@@ -3,7 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const requireRole = require('../middleware/auth');
-
+const getAllUsers = require('../services/userService');
 
 
 
@@ -65,18 +65,12 @@ const requireRole = require('../middleware/auth');
  */
 router.get('/admin/users', requireRole.check(['admin']), async (req, res) => {
     try {
-        const [users] = await db.promise().query(`
-            SELECT id, username, role 
-            FROM users
-            ORDER BY role, username
-        `);
-        
+        const users = await getAllUsers();
         res.json({
             success: true,
             count: users.length,
             data: users
         });
-        
     } catch (err) {
         console.error('Error fetching users:', err);
         res.status(500).json({ success: false, error: 'Failed to fetch users' });
