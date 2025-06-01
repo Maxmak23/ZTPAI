@@ -1,10 +1,12 @@
 const request = require('supertest');
 const app = require('../../testServer');
+const deleteUserByUsername = require('../../services/deleteUserByUsername');
 
 describe('POST /register', () => {
     const baseUsername = 'TestRegisterUser';
     const validPassword = 'strongpassword';
     const validRole = 'client';
+
 
     it('should return 400 if fields are missing', async () => {
         const res = await request(app)
@@ -54,4 +56,14 @@ describe('POST /register', () => {
 
         expect(res.body).toHaveProperty('error', 'Username already exists');
     });
+
+    
+    afterAll(async () => {
+        // Clean up the test user
+        deleteUserByUsername(`${baseUsername}`);
+        deleteUserByUsername(`${baseUsername}_short`);
+        deleteUserByUsername(`${baseUsername}_success`);
+        deleteUserByUsername(`${baseUsername}_duplicate`);
+    });
+    
 });

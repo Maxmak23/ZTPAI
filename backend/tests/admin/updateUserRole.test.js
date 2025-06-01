@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../../testServer');
+const deleteUserByUsername = require('../../services/deleteUserByUsername');
 
 describe('PUT /admin/users/:id/role', () => {
     let agent;
@@ -54,6 +55,11 @@ describe('PUT /admin/users/:id/role', () => {
 
         expect(res.body).toHaveProperty('error', 'Invalid role');
         expect(res.body.valid_roles).toContain('admin');
+    });
+    
+    afterAll(async () => {
+        // Clean up the test user
+        await deleteUserByUsername('TestUserToUpdate');
     });
 
 });
