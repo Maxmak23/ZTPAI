@@ -5,8 +5,7 @@ const db = require('../config/db');
 const checkRole = require('../middleware/checkRole');
 const createUser = require('../services/createUser');
 const findUserByUsername = require('../services/findUserByUsername');
-
-
+const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../config/jwt');
 
 
 /**
@@ -193,18 +192,35 @@ router.post("/login", async (req, res) => {
             return res.status(401).json({ error: "Invalid credentials" });
         }
 
+        // 🟢 Save session
         req.session.user = {
             id: user.id,
             username: user.username,
             role: user.role
         };
 
-        console.log(req.session.user);
+        // 🟢 Also send JWTs
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
 
-        res.json({
-            message: "Login successful",
-            user: req.session.user
-        });
+        res
+            .cookie('access_token', accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 15 * 60 * 1000
+            })
+            .cookie('refresh_token', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 7 * 24 * 60 * 60 * 1000
+            })
+            .json({
+                message: "Login successful",
+                user: req.session.user
+            });
+
     } catch (err) {
         console.error('Login error:', err);
         res.status(500).json({
@@ -347,8 +363,11 @@ router.post("/logout", (req, res) => {
                 console.error('Session destruction error:', err);
                 return res.status(500).json({ error: 'Logout failed' });
             }
-            
-            res.clearCookie('connect.sid'); // Clear the session cookie
+
+            res.clearCookie('connect.sid');
+            res.clearCookie('access_token');
+            res.clearCookie('refresh_token');
+
             res.json({ message: "Logged out successfully" });
         });
     } catch (err) {
@@ -359,5 +378,50 @@ router.post("/logout", (req, res) => {
         });
     }
 });
+
+
+
+
+
+
+
+
+
+router.post('/refresh', async (req, res) => {
+    try {
+        const token = req.cookies['refresh_token'];
+        if (!token) {
+            return res.status(401).json({ error: 'Missing refresh token' });
+        }
+
+        const decoded = verifyRefreshToken(token);
+
+        // Optional: check against database or session
+        const users = await findUserByUsername(decoded.username);
+        if (users.length === 0) {
+            return res.status(401).json({ error: 'User not found' });
+        }
+
+        const user = users[0];
+        const accessToken = generateAccessToken(user);
+
+        res.cookie('access_token', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 15 * 60 * 1000
+        });
+
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error('Refresh token error:', err);
+        res.status(401).json({ error: 'Invalid or expired refresh token' });
+    }
+});
+
+
+
+
 
 module.exports = router;
