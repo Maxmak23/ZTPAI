@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const requireRole = require('../middleware/auth');
+const addMovieWithScreenings = require('../services/addMovieWithScreenings');
 
 
 
@@ -104,70 +105,35 @@ router.post('/movies', async (req, res) => {
     try {
         const { title, description, duration, start_date, end_date, screenings, room } = req.body;
 
-        // Validate required fields
         if (!title || !duration || !start_date || !end_date) {
             return res.status(400).json({ error: 'Missing required fields (title, duration, start_date, or end_date)' });
         }
 
-        // Validate duration is a positive number
         if (isNaN(duration)) {
             return res.status(400).json({ error: 'Duration must be a number' });
         }
 
-        // Validate date format (basic check)
         if (isNaN(new Date(start_date).getTime()) || isNaN(new Date(end_date).getTime())) {
             return res.status(400).json({ error: 'Invalid date format' });
         }
 
-        // Validate screenings array
         if (!Array.isArray(screenings) || screenings.length === 0) {
             return res.status(400).json({ error: 'At least one screening time is required' });
         }
 
-        // Start transaction
-        const connection = await db.promise().getConnection();
-        await connection.beginTransaction();
+        const result = await addMovieWithScreenings(
+            { title, description, duration, start_date, end_date, room },
+            screenings
+        );
 
-        try {
-            // Insert movie
-            const [movieResult] = await connection.query(
-                "INSERT INTO movies (title, description, duration, start_date, end_date, room) VALUES (?, ?, ?, ?, ?, ?)",
-                [title, description, duration, start_date, end_date, room]
-            );
-            
-            const movieId = movieResult.insertId;
-
-            // Insert screenings
-            const screeningPromises = screenings.map(time => {
-                if (!time) {
-                    throw new Error('Invalid screening time');
-                }
-                return connection.query(
-                    "INSERT INTO screenings (movie_id, screening_time) VALUES (?, ?)",
-                    [movieId, time]
-                );
-            });
-
-            await Promise.all(screeningPromises);
-            await connection.commit();
-
-            res.status(201).json({ 
-                message: "Movie added successfully", 
-                movieId,
-                screeningsAdded: screenings.length
-            });
-
-        } catch (transactionErr) {
-            await connection.rollback();
-            console.error('Transaction error:', transactionErr);
-            throw transactionErr;
-        } finally {
-            connection.release();
-        }
+        res.status(201).json({
+            message: "Movie added successfully",
+            ...result
+        });
 
     } catch (err) {
         console.error('Add movie error:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to add movie',
             details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });

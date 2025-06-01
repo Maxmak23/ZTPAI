@@ -14,7 +14,6 @@ async function addMovieWithScreenings(movieData, screenings) {
         );
 
         const movieId = movieResult.insertId;
-
         const screeningPromises = screenings.map(time => {
             if (!time) throw new Error('Invalid screening time');
             return connection.query(
