@@ -2,12 +2,13 @@ const request = require('supertest');
 const app = require('../testServer');
 const loginAndReturnAgent = require('../services/loginAndReturnAgent');
 const deleteUserByUsername = require('../services/deleteUserByUsername');
+const deleteMovieById = require('../services/deleteMovieById');
 
 describe('POST /movies', () => {
     let agent;
+    let createdMovieId = null; // ⬅️ store movieId here
 
     beforeAll(async () => {
-        // Log in as employee (or role with permission)
         agent = await loginAndReturnAgent('TestMovieAdder', 'strongpassword', 'employee');
     });
 
@@ -68,11 +69,14 @@ describe('POST /movies', () => {
         expect(res.body).toHaveProperty('message', 'Movie added successfully');
         expect(res.body).toHaveProperty('movieId');
         expect(res.body).toHaveProperty('screeningsAdded');
+
+        createdMovieId = res.body.movieId; // ⬅️ Save movie ID for cleanup
     });
 
-    
     afterAll(async () => {
-        // Clean up the test user
-        deleteUserByUsername('TestMovieAdder');
+        await deleteUserByUsername('TestMovieAdder');
+        if (createdMovieId) {
+            await deleteMovieById(createdMovieId);
+        }
     });
 });
