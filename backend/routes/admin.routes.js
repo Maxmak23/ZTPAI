@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const requireRole = require('../middleware/auth');
 const getAllUsers = require('../services/userService');
+const updateUserRole = require('../services/updateUserRole');
 
 
 
@@ -168,7 +169,6 @@ router.put('/admin/users/:id/role', requireRole.check(['admin']), async (req, re
         const { role } = req.body;
         const validRoles = ['client', 'employee', 'manager', 'admin'];
 
-        // Validate role
         if (!role || !validRoles.includes(role)) {
             return res.status(400).json({ 
                 error: 'Invalid role',
@@ -176,24 +176,18 @@ router.put('/admin/users/:id/role', requireRole.check(['admin']), async (req, re
             });
         }
 
-        // Prevent admin from removing their own admin rights
         if (userId == req.session.user.id && role !== 'admin') {
             return res.status(400).json({ 
                 error: 'You cannot remove your own admin privileges'
             });
         }
 
-        await db.promise().query(`
-            UPDATE users 
-            SET role = ?
-            WHERE id = ?
-        `, [role, userId]);
-        
+        await updateUserRole(userId, role);
+
         res.json({ 
             success: true,
             message: 'User role updated successfully'
         });
-        
     } catch (err) {
         console.error('Error updating user role:', err);
         res.status(500).json({ success: false, error: 'Failed to update user role' });
