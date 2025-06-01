@@ -5,6 +5,7 @@ const db = require('../config/db');
 const requireRole = require('../middleware/auth');
 const addMovieWithScreenings = require('../services/addMovieWithScreenings');
 const getAllMoviesWithScreenings = require('../services/getAllMoviesWithScreenings');
+const updateMovieWithScreenings = require('../services/updateMovieWithScreenings');
 
 
 
@@ -327,80 +328,37 @@ router.put('/movies/:id', async (req, res) => {
         const movieId = req.params.id;
         const { title, description, duration, start_date, end_date, screenings, room } = req.body;
 
-        // Validate movie ID
         if (isNaN(movieId)) {
             return res.status(400).json({ error: 'Invalid movie ID' });
         }
 
-        // Validate required fields
         if (!title || !duration || !start_date || !end_date) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        // Validate screenings array
         if (!Array.isArray(screenings)) {
             return res.status(400).json({ error: 'Screenings must be an array' });
         }
 
-        // Start transaction
-        const connection = await db.promise().getConnection();
-        await connection.beginTransaction();
+        const result = await updateMovieWithScreenings(
+            movieId,
+            { title, description, duration, start_date, end_date, room },
+            screenings
+        );
 
-        try {
-            // Update movie
-            const [updateResult] = await connection.query(
-                "UPDATE movies SET title = ?, description = ?, duration = ?, start_date = ?, end_date = ?, room = ? WHERE id = ?",
-                [title, description, duration, start_date, end_date, room, movieId]
-            );
-
-            if (updateResult.affectedRows === 0) {
-                throw new Error('Movie not found');
-            }
-
-            // Delete existing screenings
-            await connection.query(
-                "DELETE FROM screenings WHERE movie_id = ?",
-                [movieId]
-            );
-
-            // Insert new screenings
-            if (screenings.length > 0) {
-                const screeningPromises = screenings.map(time => {
-                    if (!time) {
-                        throw new Error('Invalid screening time');
-                    }
-                    return connection.query(
-                        "INSERT INTO screenings (movie_id, screening_time) VALUES (?, ?)",
-                        [movieId, time]
-                    );
-                });
-
-                await Promise.all(screeningPromises);
-            }
-
-            await connection.commit();
-
-            res.json({ 
-                message: "Movie updated successfully",
-                screeningsUpdated: screenings.length
-            });
-
-        } catch (transactionErr) {
-            await connection.rollback();
-            console.error('Transaction error:', transactionErr);
-            throw transactionErr;
-        } finally {
-            connection.release();
-        }
+        res.json({
+            message: "Movie updated successfully",
+            ...result
+        });
 
     } catch (err) {
         console.error('Update movie error:', err);
-        
+
         if (err.message === 'Movie not found') {
             return res.status(404).json({ error: err.message });
         }
 
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Failed to update movie',
             details: process.env.NODE_ENV === 'development' ? err.message : undefined
         });
