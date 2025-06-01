@@ -3,6 +3,8 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const requireRole = require('../middleware/auth');
+const createUser = require('../services/createUser');
+const findUserByUsername = require('../services/findUserByUsername');
 
 
 
@@ -53,33 +55,28 @@ const requireRole = require('../middleware/auth');
 router.post("/register", async (req, res) => {
     try {
         const { username, password, role } = req.body;
-        
-        // Validate input
+
         if (!username || !password || !role) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
-        
+
         if (password.length < 8) {
             return res.status(400).json({ error: 'Password must be at least 8 characters long' });
         }
 
-        // Check if user already exists
-        const checkUserQuery = "SELECT * FROM users WHERE username = ?";
-        const [existingUsers] = await db.promise().query(checkUserQuery, [username]);
-        
+        const existingUsers = await findUserByUsername(username);
         if (existingUsers.length > 0) {
             return res.status(409).json({ error: 'Username already exists' });
         }
 
-        // Hash password and create user
         const hash = await bcrypt.hash(password, 10);
-        const createUserQuery = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-        const [result] = await db.promise().query(createUserQuery, [username, hash, role]);
+        const userId = await createUser(username, hash, role);
 
         res.status(201).json({ 
             message: "User registered successfully",
-            userId: result.insertId 
+            userId
         });
+
     } catch (err) {
         console.error('Registration error:', err);
         res.status(500).json({ 
