@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
-const requireRole = require('../middleware/auth');
-const getAllUsers = require('../services/userService');
+const checkRole = require('../middleware/checkRole');
+const getAllUsers = require('../services/getAllUsers');
 const updateUserRole = require('../services/updateUserRole');
 
 
@@ -64,7 +64,7 @@ const updateUserRole = require('../services/updateUserRole');
  *                   type: string
  *                   example: "Failed to fetch users"
  */
-router.get('/admin/users', requireRole.check(['admin']), async (req, res) => {
+router.get('/admin/users', checkRole(['admin']), async (req, res) => {
     try {
         const users = await getAllUsers();
         res.json({
@@ -163,7 +163,7 @@ router.get('/admin/users', requireRole.check(['admin']), async (req, res) => {
  *                   example: "Failed to update user role"
  */
 
-router.put('/admin/users/:id/role', requireRole.check(['admin']), async (req, res) => {
+router.put('/admin/users/:id/role', checkRole(['admin']), async (req, res) => {
     try {
         const userId = req.params.id;
         const { role } = req.body;

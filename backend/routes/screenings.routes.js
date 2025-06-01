@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
-const requireRole = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
 const getScreeningDetails = require('../services/getScreeningDetails');
 const getReservedSeats = require('../services/getReservedSeats');
 const getUpcomingScreeningStats = require('../services/getUpcomingScreeningStats');
@@ -196,7 +196,7 @@ router.get('/screenings/:id', async (req, res) => {
  */
 
 
-router.get('/screenings_stats', requireRole.check(['employee']), async (req, res) => {
+router.get('/screenings_stats', checkRole(['employee']), async (req, res) => {
     try {
         const currentDate = new Date().toISOString().split('T')[0];
         const screenings = await getUpcomingScreeningStats(currentDate);

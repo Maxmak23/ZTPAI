@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/db');
-const requireRole = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
 const queue = require('../queue');
 
 const isSeatReserved = require('../services/isSeatReserved');
@@ -203,7 +203,7 @@ router.post('/reservations', async (req, res) => {
  *                   type: string
  *                   example: "Failed to fetch reservations"
  */
-router.get('/reservations/my', requireRole.check(['client']), async (req, res) => {
+router.get('/reservations/my', checkRole(['client']), async (req, res) => {
     try {
         const reservations = await getUserReservations(req.session.user.id);
 
