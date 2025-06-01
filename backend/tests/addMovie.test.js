@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../testServer');
 const loginAndReturnAgent = require('../services/loginAndReturnAgent');
+const deleteUserByUsername = require('../services/deleteUserByUsername');
 
 describe('POST /movies', () => {
     let agent;
@@ -67,5 +68,11 @@ describe('POST /movies', () => {
         expect(res.body).toHaveProperty('message', 'Movie added successfully');
         expect(res.body).toHaveProperty('movieId');
         expect(res.body).toHaveProperty('screeningsAdded');
+    });
+
+    
+    afterAll(async () => {
+        // Clean up the test user
+        deleteUserByUsername('TestMovieAdder');
     });
 });
