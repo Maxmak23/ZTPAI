@@ -1,6 +1,7 @@
 const request = require('supertest');
 const app = require('../testServer');
 const loginAndReturnAgent = require('../services/loginAndReturnAgent');
+const deleteUserByUsername = require('../services/deleteUserByUsername');
 
 describe('GET /movies', () => {
     let agent;
@@ -32,5 +33,9 @@ describe('GET /movies', () => {
             .expect(200);
 
         expect(Array.isArray(res.body)).toBe(true);
+    });
+
+    afterAll(async () => {
+        await deleteUserByUsername(username);
     });
 });

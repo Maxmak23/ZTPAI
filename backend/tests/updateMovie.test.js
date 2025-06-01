@@ -1,6 +1,7 @@
 const request = require('../testServer');
 const loginAndReturnAgent = require('../services/loginAndReturnAgent');
-const deleteMovieById = require('../services/deleteMovieById'); // optional cleanup util
+const deleteUserByUsername = require('../services/deleteUserByUsername');
+const deleteMovieById = require('../services/deleteMovieById');
 
 describe('PUT /movies/:id', () => {
     let agent;
@@ -76,6 +77,7 @@ describe('PUT /movies/:id', () => {
     });
 
     afterAll(async () => {
+        await deleteUserByUsername('TestEditor');
         if (movieId) await deleteMovieById(movieId);
     });
 });
