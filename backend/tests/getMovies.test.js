@@ -36,6 +36,6 @@ describe('GET /movies', () => {
     });
 
     afterAll(async () => {
-        await deleteUserByUsername(username);
+        await deleteUserByUsername('TestMovieViewer');
     });
 });
