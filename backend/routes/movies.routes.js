@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 const requireRole = require('../middleware/auth');
 const addMovieWithScreenings = require('../services/addMovieWithScreenings');
+const getAllMoviesWithScreenings = require('../services/getAllMoviesWithScreenings');
 
 
 
@@ -203,23 +204,8 @@ router.post('/movies', async (req, res) => {
  */
 router.get('/movies', async (req, res) => {
     try {
-        const query = `
-            SELECT movies.*, GROUP_CONCAT(screenings.screening_time) AS screening_times
-            FROM movies
-            LEFT JOIN screenings ON movies.id = screenings.movie_id
-            GROUP BY movies.id
-        `;
-
-        const [results] = await db.promise().query(query);
-
-        const movies = results.map(movie => ({
-            ...movie,
-            screenings: movie.screening_times ? 
-                movie.screening_times.split(',').filter(time => time) : []
-        }));
-
+        const movies = await getAllMoviesWithScreenings();
         res.json(movies);
-
     } catch (err) {
         console.error('Get movies error:', err);
         res.status(500).json({ 

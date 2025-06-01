@@ -7,7 +7,6 @@ async function getAllMoviesWithScreenings() {
         LEFT JOIN screenings ON movies.id = screenings.movie_id
         GROUP BY movies.id
     `);
-
     return results.map(movie => ({
         ...movie,
         screenings: movie.screening_times
