@@ -1,4 +1,4 @@
-const db = require('../db'); // adjust the path if needed
+const db = require('../config/db');
 
 async function updateUserRole(userId, role) {
     await db.promise().query(`

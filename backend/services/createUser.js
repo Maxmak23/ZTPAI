@@ -1,4 +1,4 @@
-const db = require('../db'); // adjust the path if needed
+const db = require('../config/db');
 
 async function createUser(username, hashedPassword, role) {
     const [result] = await db.promise().query(
