@@ -7,6 +7,8 @@ const cors = require("cors");
 const session = require("express-session");
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const cookieParser = require('cookie-parser');
+
 
 const errorHandler = require('./middleware/error');
 const specs = require('./config/swagger');
@@ -33,6 +35,7 @@ app.use(cors({
     exposedHeaders: ['set-cookie']
 }));
 
+app.use(cookieParser());
 app.use(express.json());
 
 // Swagger documentation
