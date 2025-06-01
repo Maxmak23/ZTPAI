@@ -7,6 +7,7 @@ const queue = require('../queue');
 
 const isSeatReserved = require('../services/isSeatReserved');
 const createReservation = require('../services/createReservation');
+const getUserReservations = require('../services/getUserReservations');
 
 
 
