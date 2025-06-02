@@ -679,6 +679,47 @@ router.get('/movies/playing', async (req, res) => {
 
 
 
+/**
+ * @swagger
+ * /rooms:
+ *   get:
+ *     tags:
+ *       - Rooms
+ *     summary: Get all cinema rooms
+ *     description: Retrieve a list of all available cinema rooms.
+ *     responses:
+ *       200:
+ *         description: List of rooms
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Room A"
+ *                   capacity:
+ *                     type: integer
+ *                     example: 120
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Failed to fetch rooms
+ *                 details:
+ *                   type: string
+ *                   example: Unexpected database error
+ */
 
 
 

@@ -384,6 +384,41 @@ router.post("/logout", (req, res) => {
 
 
 
+/**
+ * @swagger
+ * /refresh_token:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Refresh access token
+ *     description: Issues a new access token using a valid refresh token stored in cookies.
+ *     requestBody:
+ *       required: false
+ *     responses:
+ *       200:
+ *         description: Access token successfully refreshed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Access token refreshed
+ *       401:
+ *         description: Unauthorized – invalid or missing refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Invalid or expired refresh token
+ */
 
 
 
