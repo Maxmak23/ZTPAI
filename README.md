@@ -9,9 +9,13 @@ Zaimplementowany projekt jest aplikacją do zarzadzania kinem. Zakres zaimplemet
 
 ### 2. Schematy architektury
    na ponizszym schemacie znajduje się schemat architektury wykorzystywany w projekcie
+
   ![1](image.png)
+
    na ponizszym schemacie znajduje się schemat utworzonej bazy danych wykorzystywanej w projekcie
+
   ![2](image_1.png)
+  
 ### 3. Instrukcja uruchomienia
 Baza danych
 Aby utworzyc baze danych należy wykonać zapytania umieszczone w pliku database.db w panelu phpMyAdmin
