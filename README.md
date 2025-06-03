@@ -15,22 +15,22 @@ Zaimplementowany projekt jest aplikacją do zarzadzania kinem. Zakres zaimplemet
    na ponizszym schemacie znajduje się schemat utworzonej bazy danych wykorzystywanej w projekcie
 
   ![2](image_1.png)
-  
+
 ### 3. Instrukcja uruchomienia
 Baza danych
 Aby utworzyc baze danych należy wykonać zapytania umieszczone w pliku database.db w panelu phpMyAdmin
 Backend
 W celu uruchomienia backendu należy wejść do folderu w którym znajduje się backend następnie wykonac polecenie:
 
-  node .\server.js
+    node .\server.js
 Frontend
 W celu uruchomienia frontendu należy wejść do folderu w którym znajduje się frontend następnie wykonac polecenie:
 
-  npm start
+    npm start
 Testy
 Aby uruchomic testy nalezy w folderze z projektem wpisac polecenie:
 
-  npm test
+    npm test
 ### 4. technologie
 Wykorzystanymi technologiami w projekcie są między innymi;
 - React to biblioteka JavaScript stworzona przez Facebooka, służąca do budowania interfejsów użytkownika w aplikacjach webowych. Działa w przeglądarce i pozwala na tworzenie dynamicznych i responsywnych komponentów.
