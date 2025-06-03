@@ -28,6 +28,7 @@ W celu uruchomienia frontendu należy wejść do folderu w którym znajduje się
 
     npm start
 Testy
+Wszystkie endpointy zostały przetestowane przy użyciu biblioteki Mocha i Chai. Testy znajdują się w folderze test. 
 Aby uruchomic testy nalezy w folderze z projektem wpisac polecenie:
 
     npm test
